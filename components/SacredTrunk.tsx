@@ -95,7 +95,7 @@ export function SacredTrunk({ stageHeight, trunkEvents, onSelect }: SacredTrunkP
             className="cursor-pointer focus-ring outline-none"
             tabIndex={0}
             role="button"
-            aria-label={`${ev.title} (${ev.year})${ev.nexus ? " — nexus event" : ""}`}
+            aria-label={`${ev.title} (${ev.year}) — Canonical${ev.nexus ? " · nexus event" : ""}`}
             onClick={() => onSelect(ev.id)}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {

@@ -225,7 +225,7 @@ export function Timeline() {
 
       <div
         ref={scrollRef}
-        className={`absolute overflow-x-auto overflow-y-hidden ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
+        className={`hide-scrollbar absolute overflow-x-auto overflow-y-hidden ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
         style={{
           top: DIMENSIONS.HEADER_HEIGHT,
           bottom: DIMENSIONS.SCRUBBER_HEIGHT,
@@ -305,28 +305,30 @@ function Header({
         <div className="flex items-center gap-3">
           <CompassRoseGlyph />
           <div>
-            <div
+            <h1
               className="text-lg leading-none"
               style={{
                 fontFamily: "var(--font-display)",
                 color: PALETTE.ink,
                 fontWeight: 700,
                 letterSpacing: "-0.01em",
+                margin: 0,
               }}
             >
               AI Lineage
-            </div>
-            <div
-              className="mt-1 text-[9px]"
+            </h1>
+            <p
+              className="mt-1 text-[10px]"
               style={{
                 fontFamily: "var(--font-mono)",
                 color: PALETTE.inkSoft,
                 letterSpacing: "0.1em",
                 textTransform: "uppercase",
+                margin: 0,
               }}
             >
               1956 — 2026 · The Evolution of Machine Intelligence
-            </div>
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -384,10 +386,18 @@ function ChromeButton({
 }
 
 function CompassRoseGlyph() {
+  // 4-point star with a center dot — reads unambiguously as a compass rose.
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={PALETTE.gold} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
-      <path d="M12 2v20M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" strokeWidth="1.2" />
+    <svg width="22" height="22" viewBox="-11 -11 22 22" aria-hidden>
+      <circle r="10" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
+      <polygon
+        points="0,-10 1.8,-1.8 10,0 1.8,1.8 0,10 -1.8,1.8 -10,0 -1.8,-1.8"
+        fill={PALETTE.gold}
+        stroke={PALETTE.ink}
+        strokeWidth={0.4}
+        strokeLinejoin="round"
+      />
+      <circle r={2} fill={PALETTE.cinnabar} />
     </svg>
   );
 }

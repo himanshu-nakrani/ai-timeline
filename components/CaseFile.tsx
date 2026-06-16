@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import type { TimelineEvent } from "@/lib/events";
 import { EVENTS } from "@/lib/events";
 import { PALETTE } from "@/lib/constants";
@@ -55,10 +55,6 @@ export function CaseFile({ event, onClose, onViewOnMap, canViewOnMap }: CaseFile
     if (!event) return;
     // Capture focus-restore target BEFORE we move focus into the modal.
     prevFocusRef.current = document.activeElement as HTMLElement | null;
-    // Focus the title first — gives screen-reader users context, and the
-    // modal can be Tab'd forward from there. (Fix #4.)
-    // Defer one frame so the panel has mounted.
-    const t = setTimeout(() => titleRef.current?.focus(), 0);
 
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -84,13 +80,20 @@ export function CaseFile({ event, onClose, onViewOnMap, canViewOnMap }: CaseFile
     };
     document.addEventListener("keydown", onKey);
     return () => {
-      clearTimeout(t);
       document.removeEventListener("keydown", onKey);
       // Restore focus only when the modal actually unmounts, not on every
       // re-render. prevFocusRef is captured once per mount.
       prevFocusRef.current?.focus?.();
     };
   }, [event, onClose]);
+
+  // Focus the title synchronously after the panel mounts — useLayoutEffect
+  // runs before paint, so the focus call wins the race against any
+  // click-induced focus on the trigger element.
+  useLayoutEffect(() => {
+    if (!event) return;
+    titleRef.current?.focus();
+  }, [event]);
 
   // Resolve branchFrom + rejoinAt IDs into readable titles.
   const lookupTitle = (id?: string) => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { decades, totalWidth, yearToX } from "@/lib/layout";
+import { decades, totalWidth, trunkY, yearToX } from "@/lib/layout";
 import { DIMENSIONS, LANES, PALETTE } from "@/lib/constants";
 
 interface OrnamentsProps {
@@ -71,33 +71,51 @@ export function CartographyOrnaments({ stageHeight }: OrnamentsProps) {
       {/* Top year ruler */}
       <RuledBand y={32} w={w} />
 
-      {/* Decade labels above the ruler, with a thin anchor line down to the trunk
-          so each decade visibly connects to its year. */}
-      {decs.map((d) => (
-        <g key={d}>
-          <text
-            x={yearToX(d)}
-            y={20}
-            textAnchor="middle"
-            fontFamily="var(--font-mono)"
-            fontSize={11}
-            fontWeight={600}
-            fill={PALETTE.ink}
-            letterSpacing={1.5}
-          >
-            {d}
-          </text>
-          <line
-            x1={yearToX(d)}
-            y1={26}
-            x2={yearToX(d)}
-            y2={44}
-            stroke={PALETTE.inkFaint}
-            strokeOpacity={0.45}
-            strokeWidth={0.6}
-          />
-        </g>
-      ))}
+      {/* Decade labels above the ruler, with a thin anchor line that runs
+          from the year label all the way down to the trunk. Two stroke weights
+          so the upper segment reads as a year tick and the lower segment
+          fades into a subtle lane-anchoring line. */}
+      {decs.map((d) => {
+        const x = yearToX(d);
+        const yToTrunk = trunkY(stageHeight);
+        return (
+          <g key={d}>
+            <text
+              x={x}
+              y={20}
+              textAnchor="middle"
+              fontFamily="var(--font-mono)"
+              fontSize={11}
+              fontWeight={600}
+              fill={PALETTE.ink}
+              letterSpacing={1.5}
+            >
+              {d}
+            </text>
+            {/* Upper segment — year tick, opaque. */}
+            <line
+              x1={x}
+              y1={26}
+              x2={x}
+              y2={44}
+              stroke={PALETTE.inkFaint}
+              strokeOpacity={0.7}
+              strokeWidth={0.8}
+            />
+            {/* Lower segment — fades to the trunk. */}
+            <line
+              x1={x}
+              y1={44}
+              x2={x}
+              y2={yToTrunk}
+              stroke={PALETTE.gold}
+              strokeOpacity={0.25}
+              strokeWidth={0.6}
+              strokeDasharray="2 4"
+            />
+          </g>
+        );
+      })}
 
       {/* Horizon label */}
       <text

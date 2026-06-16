@@ -22,6 +22,21 @@ export function FirstRunHint() {
     }
   }, []);
 
+  // Listen for Escape to dismiss, in addition to the button.
+  useEffect(() => {
+    if (!visible) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        dismiss();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+    // dismiss is stable (defined below) and doesn't capture additional deps.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
+
   const dismiss = () => {
     try {
       localStorage.setItem(TIMING.HINT_OVERLAY_KEY, "1");
@@ -60,7 +75,7 @@ export function FirstRunHint() {
         className="mt-2 text-xs leading-relaxed"
         style={{ fontFamily: "var(--font-sans)", color: PALETTE.inkSoft }}
       >
-        Scroll horizontally to travel through the years. Click any event to view its details. Use arrow keys to step between points.
+        Scroll or drag to travel through the years. Click any event for details. Arrows step between events · Home/End jump to start/finish · Space plays the timeline.
       </div>
       <button
         type="button"

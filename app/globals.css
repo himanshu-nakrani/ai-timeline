@@ -109,6 +109,17 @@ button {
   outline-color: var(--paper-ink);
 }
 
+/* Hide native scrollbar on the timeline scroller — the custom TempPad
+   scrubber owns the scroll affordance, and the OS scrollbar would
+   compete with it visually. */
+.hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Nexus ring pulse — Tailwind v4's animate-pulse ignores prefers-reduced-motion.
    Use our own keyframes so the media query is respected. */
 @keyframes nexus-pulse {

@@ -35,7 +35,7 @@ export function Branch({ placement, scrollRef, onSelect }: BranchProps) {
   const { event, laneYPx, eventX, toX, slot } = placement;
   const fate = event.fate as Exclude<BranchFate, "trunk">;
 
-  const pathRef = useRef<SVGLineElement | null>(null);
+  const pathRef = useRef<SVGPathElement | null>(null);
   const [revealed, setRevealed] = useState(false);
 
   // Reveal on first viewport entry.

@@ -1,29 +1,28 @@
-// Mappa AI Mundi — illuminated cartography palette.
-// All magic numbers in one place.
+// AI Lineage - Modern Minimalist Config.
+// All magic numbers and styling tokens in one place.
 
 export const PALETTE = {
-  parchment: "#EBDFBF",
-  parchmentDeep: "#D9C89B",
+  parchment: "#090a0f", // Deep slate background
+  parchmentDeep: "#12141f", // Dark gray lane bands
 
-  ink: "#2A1A0C",
-  inkSoft: "#4A331E",
-  // Darkened so small text on parchment clears WCAG AA (≥4.5:1).
-  inkFaint: "#5E4A2A",
+  ink: "#f3f4f6", // Crisp off-white text
+  inkSoft: "#9ca3af", // Muted gray text
+  inkFaint: "#6b7280", // Border and rule gray
 
-  gold: "#A67E14",
-  goldBright: "#D9AF3A",
+  gold: "#06b6d4", // Electric cyan for trunk core
+  goldBright: "#22d3ee", // Bright cyan for hover/highlights
 
   // Vermilion: reserved for abandoned/pruned.
-  vermilion: "#B33124",
+  vermilion: "#f43f5e", // Crimson/rose
   // Cinnabar: nexus accents and editorial eyebrow lines.
-  cinnabar: "#D55A1B",
+  cinnabar: "#fb7185",
 
-  // Lapis — navigator's ink for active expeditions.
-  blue: "#264F73",
-  blueBright: "#3D7AAE",
+  // Lapis — active expedition colors.
+  blue: "#10b981", // Emerald green for active branches
+  blueBright: "#34d399",
 
-  // Wax-seal red — case file seal only.
-  wax: "#7E1F1F",
+  // Wax-seal / rejoined markers.
+  wax: "#6366f1", // Indigo
 } as const;
 
 export const DIMENSIONS = {
@@ -41,10 +40,7 @@ export const DIMENSIONS = {
 
 /**
  * Swimlanes. Each lane is a horizontal track at an absolute Y, computed as
- * a fraction of stageHeight. The trunk sits in the middle. Research is
- * directly above the trunk (the "core" lane); products / hardware / policy
- * fan further out. Abandoned routes use a dedicated lane below everything
- * else so the eye knows where to find them.
+ * a fraction of stageHeight. The trunk sits in the middle.
  */
 export type LaneId =
   | "policy"
@@ -58,20 +54,20 @@ export interface LaneDef {
   id: LaneId;
   /** Y fraction of stageHeight. */
   y: number;
-  /** Latin section heading drawn at the far left. */
+  /** Section heading drawn at the far left. */
   label: string;
-  /** Smaller English subtitle under the Latin label. */
+  /** Smaller subtitle under the label. */
   sublabel: string;
 }
 
 /** Lanes in vertical order, top → bottom. */
 export const LANES: LaneDef[] = [
-  { id: "policy",    y: 0.16, label: "Lex",        sublabel: "Policy" },
-  { id: "hardware",  y: 0.28, label: "Instrumenta", sublabel: "Hardware" },
-  { id: "products",  y: 0.40, label: "Opera",       sublabel: "Products" },
-  { id: "trunk",     y: 0.54, label: "Via Aurea",   sublabel: "Canonical" },
-  { id: "research",  y: 0.68, label: "Doctrina",    sublabel: "Research" },
-  { id: "abandoned", y: 0.84, label: "Dracones",    sublabel: "Abandoned" },
+  { id: "policy",    y: 0.16, label: "Policy",     sublabel: "REGULATION" },
+  { id: "hardware",  y: 0.28, label: "Hardware",   sublabel: "COMPUTE" },
+  { id: "products",  y: 0.40, label: "Products",   sublabel: "DEPLOYED" },
+  { id: "trunk",     y: 0.54, label: "Canonical",  sublabel: "TRUNK" },
+  { id: "research",  y: 0.68, label: "Research",   sublabel: "FOUNDATION" },
+  { id: "abandoned", y: 0.84, label: "Abandoned",  sublabel: "PRUNED" },
 ];
 
 /** Look up a lane by id. */
@@ -87,5 +83,5 @@ export const TIMING = {
 } as const;
 
 export const FLAGS = {
-  SHOW_MASCOT: process.env.NEXT_PUBLIC_SHOW_MASCOT === "1",
+  SHOW_MASCOT: false, // Turn off astrolabe in minimal pivot
 } as const;

@@ -32,6 +32,7 @@ export function Timeline() {
   const [view, setView] = useState<"graph" | "list">("graph");
   const [autoplay, setAutoplay] = useState(false);
   const [stageHeight, setStageHeight] = useState<number>(DIMENSIONS.STAGE_MIN_HEIGHT);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     document.body.dataset.view = view;
@@ -91,11 +92,13 @@ export function Timeline() {
       const dx = e.clientX - d.x;
       if (!d.moved && Math.abs(dx) < DRAG_THRESHOLD_PX) return;
       d.moved = true;
+      setIsDragging(true);
       el.scrollLeft = d.left - dx;
     };
     const onUp = () => {
       if (dragRef.current?.moved) lastPanEndAt.current = performance.now();
       dragRef.current = null;
+      setIsDragging(false);
     };
     el.addEventListener("mousedown", onDown);
     window.addEventListener("mousemove", onMove);
@@ -184,6 +187,19 @@ export function Timeline() {
     setSelectedId(id);
   }, []);
   const handleClose = useCallback(() => setSelectedId(null), []);
+  // Switch to the graph view, close the dossier, and scroll the map to the
+  // event's year. Triggered by the case file's "View on map" action.
+  const handleViewOnMap = useCallback((id: string) => {
+    setSelectedId(null);
+    setView("graph");
+    // Defer the scroll until after the graph view has mounted.
+    requestAnimationFrame(() => {
+      const el = scrollRef.current;
+      const ev = byId.get(id);
+      if (!el || !ev) return;
+      el.scrollTo({ left: yearToX(ev.year, ev.month) - 80, behavior: "smooth" });
+    });
+  }, [byId]);
 
   if (view === "list") {
     return (
@@ -193,7 +209,7 @@ export function Timeline() {
         <main className="relative z-10">
           <EventsList events={sorted} onSelect={handleSelect} />
         </main>
-        <CaseFile event={selected} onClose={handleClose} />
+        <CaseFile event={selected} onClose={handleClose} onViewOnMap={handleViewOnMap} canViewOnMap={true} />
       </div>
     );
   }
@@ -207,22 +223,18 @@ export function Timeline() {
 
       <Header view={view} onView={setView} autoplay={autoplay} onAutoplay={() => setAutoplay((a) => !a)} />
 
-      {/* Visually hidden h1 for screen readers / SEO. */}
-      <h1 className="sr-only">Mappa AI Mundi — A Cartography of Artificial Intelligence, 1956 to 2026</h1>
-
       <div
         ref={scrollRef}
-        className="absolute overflow-x-auto overflow-y-hidden"
+        className={`absolute overflow-x-auto overflow-y-hidden ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
         style={{
           top: DIMENSIONS.HEADER_HEIGHT,
           bottom: DIMENSIONS.SCRUBBER_HEIGHT,
           left: 0,
           right: 0,
-          cursor: "grab",
           paddingLeft: DIMENSIONS.LANE_RAIL_WIDTH,
         }}
         role="region"
-        aria-label="Map of artificial intelligence, 1956 to 2026"
+        aria-label="Chronology of artificial intelligence, 1956 to 2026"
         tabIndex={0}
       >
         <div style={{ width, height: stageHeight, position: "relative" }}>
@@ -231,8 +243,7 @@ export function Timeline() {
             height={stageHeight}
             viewBox={`0 0 ${width} ${stageHeight}`}
             style={{ display: "block" }}
-            role="img"
-            aria-label="Map of AI advancements from 1956 to 2026"
+            aria-hidden
           >
             <CartographyOrnaments stageHeight={stageHeight} />
             <SacredTrunk stageHeight={stageHeight} trunkEvents={trunkEvents} onSelect={handleSelect} />
@@ -286,8 +297,8 @@ function Header({
       style={{
         height: DIMENSIONS.HEADER_HEIGHT,
         background: PALETTE.parchment,
-        borderBottom: `1px solid ${PALETTE.inkFaint}`,
-        boxShadow: `0 1px 0 rgba(94, 74, 42, 0.18)`,
+        borderBottom: `1px solid rgba(255, 255, 255, 0.06)`,
+        boxShadow: `0 4px 20px -5px rgba(0, 0, 0, 0.3)`,
       }}
     >
       <div className="mx-auto flex h-full max-w-[1600px] items-center justify-between gap-4 px-4 sm:px-6">
@@ -299,21 +310,22 @@ function Header({
               style={{
                 fontFamily: "var(--font-display)",
                 color: PALETTE.ink,
-                fontWeight: 600,
-                letterSpacing: "0.02em",
+                fontWeight: 700,
+                letterSpacing: "-0.01em",
               }}
             >
-              Mappa AI Mundi
+              AI Lineage
             </div>
             <div
-              className="mt-0.5 text-[10px]"
+              className="mt-1 text-[9px]"
               style={{
-                fontFamily: "var(--font-script)",
+                fontFamily: "var(--font-mono)",
                 color: PALETTE.inkSoft,
-                letterSpacing: "0.18em",
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
               }}
             >
-              MCMLVI — MMXXVI · A Cartography of Artificial Intelligence
+              1956 — 2026 · The Evolution of Machine Intelligence
             </div>
           </div>
         </div>
@@ -356,16 +368,16 @@ function ChromeButton({
     <button
       type="button"
       onClick={onClick}
-      className="focus-ring flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] tracking-widest"
+      className="focus-ring flex items-center gap-1.5 px-2.5 py-1.5 text-[10px] tracking-wider rounded transition-colors hover:bg-[rgba(255,255,255,0.04)]"
       style={{
-        border: `1px solid ${PALETTE.inkSoft}`,
+        border: `1px solid rgba(255, 255, 255, 0.12)`,
         color: PALETTE.ink,
         fontFamily: "var(--font-mono)",
         background: "transparent",
       }}
       {...aria}
     >
-      <span aria-hidden>{glyph}</span>
+      <span aria-hidden className="text-[8px]">{glyph}</span>
       {children}
     </button>
   );
@@ -373,15 +385,9 @@ function ChromeButton({
 
 function CompassRoseGlyph() {
   return (
-    <svg width="22" height="22" viewBox="-12 -12 24 24" aria-hidden>
-      <circle r={10.5} fill="none" stroke={PALETTE.ink} strokeWidth={0.6} />
-      <polygon
-        points="0,-10 1.8,-1.8 10,0 1.8,1.8 0,10 -1.8,1.8 -10,0 -1.8,-1.8"
-        fill={PALETTE.gold}
-        stroke={PALETTE.ink}
-        strokeWidth={0.6}
-      />
-      <circle r={1.6} fill={PALETTE.cinnabar} />
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={PALETTE.gold} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
+      <path d="M12 2v20M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" strokeWidth="1.2" />
     </svg>
   );
 }

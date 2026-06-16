@@ -18,7 +18,7 @@ export function LaneRail({ stageHeight }: LaneRailProps) {
       className="absolute inset-0"
       style={{
         background: PALETTE.parchment,
-        borderRight: `1px solid ${PALETTE.ink}`,
+        borderRight: `1px solid rgba(255, 255, 255, 0.06)`,
       }}
     >
       {LANES.map((lane) => {
@@ -38,9 +38,9 @@ export function LaneRail({ stageHeight }: LaneRailProps) {
             <div
               style={{
                 fontFamily: "var(--font-display)",
-                fontSize: isTrunk ? 19 : 16,
-                fontWeight: isTrunk ? 600 : 500,
-                letterSpacing: "0.01em",
+                fontSize: isTrunk ? 16 : 14,
+                fontWeight: 600,
+                letterSpacing: "0.02em",
                 lineHeight: 1,
               }}
             >
@@ -49,14 +49,14 @@ export function LaneRail({ stageHeight }: LaneRailProps) {
             <div
               className="mt-1"
               style={{
-                fontFamily: "var(--font-script)",
-                fontSize: 10,
-                color: isAbandoned ? PALETTE.vermilion : PALETTE.inkFaint,
-                letterSpacing: 3,
+                fontFamily: "var(--font-mono)",
+                fontSize: 9,
+                color: isAbandoned ? PALETTE.vermilion : PALETTE.inkSoft,
+                letterSpacing: 1.5,
                 lineHeight: 1,
               }}
             >
-              {lane.sublabel.toUpperCase()}
+              {lane.sublabel}
             </div>
           </div>
         );

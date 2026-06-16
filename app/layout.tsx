@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, JetBrains_Mono, Inter, IM_Fell_English_SC } from "next/font/google";
+import { Plus_Jakarta_Sans, JetBrains_Mono, Inter } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
-const cormorant = Cormorant_Garamond({
+const displayFont = Plus_Jakarta_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-display",
@@ -23,22 +23,15 @@ const inter = Inter({
   display: "swap",
 });
 
-const fell = IM_Fell_English_SC({
-  subsets: ["latin"],
-  weight: ["400"],
-  variable: "--font-script",
-  display: "swap",
-});
-
 export const metadata: Metadata = {
-  title: "Mappa AI Mundi · A Cartography of Artificial Intelligence",
+  title: "AI Lineage · The Evolution of Machine Intelligence",
   description:
-    "An illuminated map of artificial intelligence, 1956 to 2026. The canonical trade route shimmers in gold leaf, expeditions sail into the unknown, and abandoned approaches are marked with the warning: hic sunt dracones.",
+    "An interactive chronology of major advancements in artificial intelligence from 1956 to 2026. A minimal, clean branching timeline tracking the canonical lineage, active trajectories, and abandoned paths.",
   metadataBase: new URL("https://ai-timeline-tva.vercel.app"),
   openGraph: {
-    title: "Mappa AI Mundi · A Cartography of Artificial Intelligence",
+    title: "AI Lineage · The Evolution of Machine Intelligence",
     description:
-      "The canonical lineage of modern AI, drawn in the style of an illuminated medieval map.",
+      "A minimal, clean branching timeline tracking the canonical lineage, active trajectories, and abandoned paths of AI.",
     type: "website",
   },
 };
@@ -47,7 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${cormorant.variable} ${jb.variable} ${inter.variable} ${fell.variable}`}
+      className={`${displayFont.variable} ${jb.variable} ${inter.variable}`}
     >
       <body>
         {children}
@@ -57,3 +50,4 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
+

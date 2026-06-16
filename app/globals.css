@@ -1,40 +1,40 @@
 @import "tailwindcss";
 
 @theme {
-  --color-mappa-parchment: #ebdfbf;
-  --color-mappa-parchment-deep: #d9c89b;
-  --color-mappa-ink: #2a1a0c;
-  --color-mappa-ink-soft: #4a331e;
-  --color-mappa-ink-faint: #5e4a2a;
-  --color-mappa-gold: #a67e14;
-  --color-mappa-gold-bright: #d9af3a;
-  --color-mappa-vermilion: #b33124;
-  --color-mappa-cinnabar: #d55a1b;
-  --color-mappa-blue: #264f73;
-  --color-mappa-blue-bright: #3d7aae;
-  --color-mappa-wax: #7e1f1f;
+  --color-mappa-parchment: #090a0f;
+  --color-mappa-parchment-deep: #12141f;
+  --color-mappa-ink: #f3f4f6;
+  --color-mappa-ink-soft: #9ca3af;
+  --color-mappa-ink-faint: #6b7280;
+  --color-mappa-gold: #06b6d4;
+  --color-mappa-gold-bright: #22d3ee;
+  --color-mappa-vermilion: #f43f5e;
+  --color-mappa-cinnabar: #fb7185;
+  --color-mappa-blue: #10b981;
+  --color-mappa-blue-bright: #34d399;
+  --color-mappa-wax: #6366f1;
 
-  --font-display: "Cormorant Garamond", "EB Garamond", Georgia, serif;
-  --font-mono: "JetBrains Mono", "IBM Plex Mono", ui-monospace, monospace;
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
-  --font-script: "IM Fell English SC", "Cormorant Garamond", Georgia, serif;
+  --font-display: var(--font-display), "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-mono), "JetBrains Mono", ui-monospace, monospace;
+  --font-sans: var(--font-sans), "Inter", system-ui, -apple-system, sans-serif;
+  --font-script: var(--font-sans), "Inter", system-ui, -apple-system, sans-serif;
 }
 
 :root {
-  --mappa-parchment: #ebdfbf;
-  --mappa-parchment-deep: #d9c89b;
-  --mappa-ink: #2a1a0c;
-  --mappa-ink-soft: #4a331e;
-  --mappa-ink-faint: #5e4a2a;
-  --mappa-gold: #a67e14;
-  --mappa-gold-bright: #d9af3a;
-  --mappa-vermilion: #b33124;
-  --mappa-cinnabar: #d55a1b;
-  --mappa-blue: #264f73;
-  --mappa-blue-bright: #3d7aae;
-  --mappa-wax: #7e1f1f;
+  --mappa-parchment: #090a0f;
+  --mappa-parchment-deep: #12141f;
+  --mappa-ink: #f3f4f6;
+  --mappa-ink-soft: #9ca3af;
+  --mappa-ink-faint: #6b7280;
+  --mappa-gold: #06b6d4;
+  --mappa-gold-bright: #22d3ee;
+  --mappa-vermilion: #f43f5e;
+  --mappa-cinnabar: #fb7185;
+  --mappa-blue: #10b981;
+  --mappa-blue-bright: #34d399;
+  --mappa-wax: #6366f1;
 
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 html,
@@ -78,61 +78,76 @@ button {
   border: 0;
 }
 
-/* Parchment background — layered radial stains + paper noise. */
+/* Minimal digital void background with subtle dot grid. */
 .mappa-parchment-bg {
   background-color: var(--mappa-parchment);
-  background-image:
-    radial-gradient(ellipse at 18% 22%, rgba(94, 74, 42, 0.16) 0, transparent 45%),
-    radial-gradient(ellipse at 82% 78%, rgba(94, 74, 42, 0.14) 0, transparent 50%),
-    radial-gradient(ellipse at 55% 50%, rgba(166, 126, 20, 0.05) 0, transparent 60%),
-    repeating-linear-gradient(115deg, rgba(94, 74, 42, 0.02) 0 2px, transparent 2px 6px),
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='3'/><feColorMatrix values='0 0 0 0 0.20  0 0 0 0 0.13  0 0 0 0 0.05  0 0 0 0.12 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-  background-blend-mode: multiply, multiply, normal, multiply, multiply;
+  background-image: 
+    radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    radial-gradient(circle at 30% 20%, rgba(6, 182, 212, 0.04) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(99, 102, 241, 0.04) 0%, transparent 50%);
+  background-size: 24px 24px, 100% 100%, 100% 100%;
 }
 
-/* Branches: ink + lapis blue + vermilion. No drop shadows. */
+/* Branch paths styling - thin, crisp, neon glows. */
 .branch-path {
   fill: none;
   stroke-linecap: round;
   stroke-linejoin: round;
   transition: opacity 240ms ease;
 }
-.branch-active   { stroke: var(--mappa-blue);          stroke-width: 2.4; }
-.branch-rejoined { stroke: var(--mappa-ink-soft);      stroke-width: 2.0; }
-.branch-pruned   { stroke: var(--mappa-vermilion);     stroke-width: 1.8; stroke-dasharray: 5 4; }
-.branch-constrains { stroke: var(--mappa-wax);         stroke-width: 1.8; stroke-dasharray: 2 6; }
+.branch-active   { stroke: var(--mappa-blue);          stroke-width: 2.0; filter: drop-shadow(0 0 3px rgba(16, 185, 129, 0.3)); }
+.branch-rejoined { stroke: var(--mappa-wax);           stroke-width: 1.8; filter: drop-shadow(0 0 2px rgba(99, 102, 241, 0.2)); }
+.branch-pruned   { stroke: var(--mappa-vermilion);     stroke-width: 1.5; stroke-dasharray: 4 4; filter: drop-shadow(0 0 2px rgba(244, 63, 94, 0.2)); }
+.branch-constrains { stroke: #f59e0b;                  stroke-width: 1.8; stroke-dasharray: 6 3; filter: drop-shadow(0 0 3px rgba(245, 158, 11, 0.35)); }
 
-/* Focus ring — cinnabar by default; the case file overrides to ink so it
-   doesn't compete with the wax seal. */
+/* Focus ring — crisp cyan glow for digital aesthetic. */
 .focus-ring:focus-visible {
-  outline: 2px solid var(--mappa-cinnabar);
+  outline: 2px solid var(--mappa-gold);
   outline-offset: 3px;
 }
 .case-paper .focus-ring:focus-visible {
   outline-color: var(--paper-ink);
 }
 
-/* The case file scroll — paper colours scoped here. */
+/* Nexus ring pulse — Tailwind v4's animate-pulse ignores prefers-reduced-motion.
+   Use our own keyframes so the media query is respected. */
+@keyframes nexus-pulse {
+  0%, 100% { stroke-opacity: 0.25; }
+  50%      { stroke-opacity: 0.55; }
+}
+
+.nexus-pulse {
+  animation: nexus-pulse 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nexus-pulse {
+    animation: none;
+    stroke-opacity: 0.4;
+  }
+}
+
+/* Case file modal: premium glassmorphism. */
 .case-paper {
-  --paper-bg: #f3e8c8;
+  --paper-bg: rgba(15, 17, 26, 0.9);
   --paper-ink: var(--mappa-ink);
   --paper-ink-soft: var(--mappa-ink-soft);
-  --paper-rule: #b8a06a;
+  --paper-rule: rgba(255, 255, 255, 0.08);
   --paper-meta: var(--mappa-ink-faint);
-  --paper-meta-soft: #8a7440;
+  --paper-meta-soft: var(--mappa-ink-faint);
   background-color: var(--paper-bg);
-  background-image:
-    radial-gradient(circle at 20% 30%, rgba(94, 74, 42, 0.10) 0, transparent 40%),
-    radial-gradient(circle at 80% 70%, rgba(94, 74, 42, 0.10) 0, transparent 40%),
-    repeating-linear-gradient(0deg, rgba(94, 74, 42, 0.06) 0 1px, transparent 1px 5px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   color: var(--paper-ink);
   font-family: var(--font-display);
-  border-top: 4px double var(--paper-rule);
+  border-top: 1px solid var(--paper-rule);
+  box-shadow: 0 -10px 25px -5px rgba(0, 0, 0, 0.3);
 }
 
 .wax-seal {
-  background: radial-gradient(circle at 35% 30%, #a93530 0%, var(--mappa-wax) 60%, #4d1212 100%);
-  color: #f7e8a8;
-  font-family: var(--font-script);
-  border: 1px solid #4d1212;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--mappa-gold-bright);
+  font-family: var(--font-mono);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  letter-spacing: 0.1em;
 }

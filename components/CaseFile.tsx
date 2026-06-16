@@ -9,6 +9,12 @@ import { PALETTE } from "@/lib/constants";
 interface CaseFileProps {
   event: TimelineEvent | null;
   onClose: () => void;
+  /** Optional: called from the "View on map" action — close the dossier and
+   *  navigate to the event in the graph view. Only wired in graph context. */
+  onViewOnMap?: (id: string) => void;
+  /** True when the host is currently in list view, so the "View on map" action
+   *  is shown as useful. */
+  canViewOnMap?: boolean;
 }
 
 const FATE_LABEL: Record<string, string> = {
@@ -40,14 +46,19 @@ const MONTH = [
   "July", "August", "September", "October", "November", "December",
 ];
 
-export function CaseFile({ event, onClose }: CaseFileProps) {
+export function CaseFile({ event, onClose, onViewOnMap, canViewOnMap }: CaseFileProps) {
   const dialogRef = useRef<HTMLDivElement | null>(null);
-  const closeRef = useRef<HTMLButtonElement | null>(null);
+  const titleRef = useRef<HTMLHeadingElement | null>(null);
+  const prevFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (!event) return;
-    const prev = document.activeElement as HTMLElement | null;
-    closeRef.current?.focus();
+    // Capture focus-restore target BEFORE we move focus into the modal.
+    prevFocusRef.current = document.activeElement as HTMLElement | null;
+    // Focus the title first — gives screen-reader users context, and the
+    // modal can be Tab'd forward from there. (Fix #4.)
+    // Defer one frame so the panel has mounted.
+    const t = setTimeout(() => titleRef.current?.focus(), 0);
 
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -73,8 +84,11 @@ export function CaseFile({ event, onClose }: CaseFileProps) {
     };
     document.addEventListener("keydown", onKey);
     return () => {
+      clearTimeout(t);
       document.removeEventListener("keydown", onKey);
-      prev?.focus?.();
+      // Restore focus only when the modal actually unmounts, not on every
+      // re-render. prevFocusRef is captured once per mount.
+      prevFocusRef.current?.focus?.();
     };
   }, [event, onClose]);
 
@@ -116,50 +130,68 @@ export function CaseFile({ event, onClose }: CaseFileProps) {
                 <div className="flex-1">
                   <div
                     style={{
-                      fontFamily: "var(--font-script)",
-                      letterSpacing: "0.22em",
-                      color: PALETTE.cinnabar,
-                      fontSize: 11,
+                      fontFamily: "var(--font-mono)",
+                      letterSpacing: "0.15em",
+                      color: PALETTE.gold,
+                      fontSize: 10,
+                      fontWeight: 600,
                     }}
                   >
-                    EX MAPPA AI MUNDI · TABULA {event.variantDesignation}
+                    AI CHRONOLOGY // LEDGER {event.variantDesignation}
                   </div>
                   <h2
                     id="case-file-title"
-                    className="mt-2"
+                    ref={titleRef}
+                    tabIndex={-1}
+                    className="mt-2 outline-none"
                     style={{
                       fontFamily: "var(--font-display)",
                       color: "var(--paper-ink)",
-                      fontSize: 40,
-                      fontWeight: 600,
-                      lineHeight: 1.05,
+                      fontSize: 32,
+                      fontWeight: 700,
+                      lineHeight: 1.1,
                     }}
                   >
                     {event.title}
                   </h2>
                   <div
-                    className="mt-1.5 italic"
+                    className="mt-1.5 opacity-80"
                     style={{
-                      fontFamily: "var(--font-script)",
+                      fontFamily: "var(--font-mono)",
                       color: "var(--paper-meta)",
-                      fontSize: 14,
+                      fontSize: 12,
                     }}
                   >
                     {event.month ? `${MONTH[event.month]} ${event.year}` : `${event.year}`}
                   </div>
+                  {canViewOnMap && onViewOnMap && (
+                    <button
+                      type="button"
+                      onClick={() => onViewOnMap(event.id)}
+                      className="focus-ring mt-3 inline-flex items-center gap-1.5 rounded px-2.5 py-1.5 text-[10px] tracking-widest"
+                      style={{
+                        fontFamily: "var(--font-mono)",
+                        color: PALETTE.gold,
+                        border: `1px solid ${PALETTE.gold}`,
+                        background: "transparent",
+                      }}
+                    >
+                      <span aria-hidden>↗</span>
+                      VIEW ON MAP
+                    </button>
+                  )}
                 </div>
 
                 <div className="flex flex-col items-end gap-3">
-                  <WaxSeal label={FATE_SEAL[event.fate] ?? "MARK"} />
+                  <StatusBadge label={FATE_SEAL[event.fate] ?? "MARK"} />
                   <button
-                    ref={closeRef}
                     type="button"
                     onClick={onClose}
-                    className="focus-ring -mt-1 -mr-2 p-2"
+                    className="focus-ring -mt-1 -mr-2 p-2 opacity-70 hover:opacity-100 transition-opacity"
                     style={{ color: "var(--paper-ink)" }}
                     aria-label="Close dossier"
                   >
-                    <span aria-hidden style={{ fontSize: 20, lineHeight: 1, fontFamily: "var(--font-display)" }}>
+                    <span aria-hidden style={{ fontSize: 18, lineHeight: 1, fontFamily: "var(--font-mono)" }}>
                       ✕
                     </span>
                   </button>
@@ -172,7 +204,7 @@ export function CaseFile({ event, onClose }: CaseFileProps) {
                   borderColor: "var(--paper-rule)",
                   fontFamily: "var(--font-mono)",
                   fontSize: 11,
-                  letterSpacing: "0.08em",
+                  letterSpacing: "0.05em",
                 }}
               >
                 <LedgerRow label="DESIGNATION" value={event.variantDesignation} />
@@ -195,9 +227,10 @@ export function CaseFile({ event, onClose }: CaseFileProps) {
               <p
                 className="mt-6 leading-relaxed"
                 style={{
-                  fontFamily: "var(--font-display)",
+                  fontFamily: "var(--font-sans)",
                   color: "var(--paper-ink-soft)",
-                  fontSize: 18,
+                  fontSize: 15,
+                  lineHeight: 1.6,
                 }}
               >
                 {event.longDescription}
@@ -206,13 +239,14 @@ export function CaseFile({ event, onClose }: CaseFileProps) {
               <div className="mt-8">
                 <div
                   style={{
-                    fontFamily: "var(--font-script)",
-                    color: PALETTE.cinnabar,
-                    letterSpacing: "0.22em",
-                    fontSize: 11,
+                    fontFamily: "var(--font-mono)",
+                    color: PALETTE.gold,
+                    letterSpacing: "0.15em",
+                    fontSize: 10,
+                    fontWeight: 600,
                   }}
                 >
-                  TESTIMONIA · SOURCES
+                  SOURCES & REFERENCES
                 </div>
                 <ul className="mt-2 space-y-1.5">
                   {event.sources.map((s, i) => (
@@ -221,15 +255,15 @@ export function CaseFile({ event, onClose }: CaseFileProps) {
                         href={s.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="focus-ring inline-flex items-center gap-1.5 text-sm underline underline-offset-2"
+                        className="focus-ring inline-flex items-center gap-1.5 text-sm underline underline-offset-2 hover:text-white transition-colors"
                         style={{
-                          fontFamily: "var(--font-display)",
+                          fontFamily: "var(--font-sans)",
                           color: "var(--paper-ink)",
                           textDecorationColor: "var(--paper-rule)",
                         }}
                       >
                         {s.label}
-                        <span aria-hidden>↗</span>
+                        <span aria-hidden className="text-[10px]">↗</span>
                       </a>
                     </li>
                   ))}
@@ -246,13 +280,14 @@ export function CaseFile({ event, onClose }: CaseFileProps) {
 function LedgerRow({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div style={{ color: "var(--paper-meta-soft)" }}>{label}</div>
+      <div style={{ color: "var(--paper-meta-soft)", fontSize: 10 }}>{label}</div>
       <div
         className="mt-1"
         style={{
           color: "var(--paper-ink)",
-          fontFamily: "var(--font-display)",
-          fontSize: 14,
+          fontFamily: "var(--font-sans)",
+          fontSize: 13,
+          fontWeight: 500,
           letterSpacing: 0,
         }}
       >
@@ -262,18 +297,17 @@ function LedgerRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function WaxSeal({ label }: { label: string }) {
+function StatusBadge({ label }: { label: string }) {
   return (
     <div
-      className="wax-seal flex h-16 w-16 items-center justify-center rounded-full"
+      className="wax-seal flex px-2.5 py-1 items-center justify-center rounded"
       style={{
-        transform: "rotate(-6deg)",
         textAlign: "center",
         lineHeight: 1,
       }}
       aria-hidden
     >
-      <span style={{ fontSize: 9, letterSpacing: "0.12em", fontWeight: 600 }}>{label}</span>
+      <span style={{ fontSize: 9, letterSpacing: "0.08em", fontWeight: 700 }}>{label}</span>
     </div>
   );
 }

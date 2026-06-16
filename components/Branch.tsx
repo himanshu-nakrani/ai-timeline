@@ -73,13 +73,17 @@ export function Branch({ placement, scrollRef, onSelect }: BranchProps) {
       ? PALETTE.vermilion
       : fate === "active"
         ? PALETTE.blue
-        : PALETTE.ink;
+        : fate === "rejoined"
+          ? PALETTE.wax
+          : "#f59e0b"; // constrains: amber
   const titleColor =
     fate === "pruned"
       ? PALETTE.vermilion
       : fate === "active"
         ? PALETTE.blueBright
-        : PALETTE.ink;
+        : fate === "rejoined"
+          ? PALETTE.wax
+          : "#fbbf24"; // constrains: brighter amber for legibility
 
   // Segment goes from the event year to the terminal year (active: edge).
   return (
@@ -87,13 +91,10 @@ export function Branch({ placement, scrollRef, onSelect }: BranchProps) {
       aria-label={`${event.title} — ${FATE_LABEL[fate]}`}
       style={{ opacity: revealed ? 1 : 0, transition: "opacity 360ms ease" }}
     >
-      {/* The lane segment for this event's lifespan. */}
-      <line
+      {/* Connected curve and lane segment for this event. */}
+      <path
         ref={pathRef}
-        x1={eventX}
-        y1={laneYPx}
-        x2={toX}
-        y2={laneYPx}
+        d={placement.pathD}
         className={`branch-path ${FATE_CLASS[fate]}`}
       />
 
@@ -109,18 +110,16 @@ export function Branch({ placement, scrollRef, onSelect }: BranchProps) {
             y1={laneYPx + dir * 5}
             x2={eventX + 6}
             y2={laneYPx + dir * 22}
-            stroke={PALETTE.inkFaint}
-            strokeWidth={0.55}
-            opacity={0.55}
+            stroke="rgba(255, 255, 255, 0.12)"
+            strokeWidth={0.7}
           />
           <line
             x1={eventX + 6}
             y1={laneYPx + dir * 22}
             x2={eventX + 6}
             y2={labelOuterY - dir * 4}
-            stroke={PALETTE.inkFaint}
-            strokeWidth={0.55}
-            opacity={0.55}
+            stroke="rgba(255, 255, 255, 0.12)"
+            strokeWidth={0.7}
           />
         </>
       )}
@@ -128,16 +127,16 @@ export function Branch({ placement, scrollRef, onSelect }: BranchProps) {
       <circle
         cx={eventX}
         cy={laneYPx}
-        r={3.6}
+        r={3}
         fill={dotColor}
         stroke={PALETTE.parchment}
-        strokeWidth={1.4}
+        strokeWidth={1.2}
       />
 
       {/* Clickable label. */}
       <g
         transform={`translate(${eventX} ${labelOuterY})`}
-        className="cursor-pointer focus-ring"
+        className="cursor-pointer focus-ring outline-none"
         tabIndex={0}
         role="button"
         aria-label={`${event.title} (${event.year}) — ${FATE_LABEL[fate]}`}
@@ -153,10 +152,11 @@ export function Branch({ placement, scrollRef, onSelect }: BranchProps) {
         <text
           y={0}
           textAnchor="middle"
-          fontFamily="var(--font-script)"
-          fontSize={10}
-          fill={PALETTE.inkFaint}
-          letterSpacing={2}
+          fontFamily="var(--font-mono)"
+          fontSize={8.5}
+          fontWeight={600}
+          fill={PALETTE.inkSoft}
+          letterSpacing={1.2}
           style={{ pointerEvents: "none", userSelect: "none" }}
         >
           {event.year}
@@ -166,12 +166,12 @@ export function Branch({ placement, scrollRef, onSelect }: BranchProps) {
           y={dir * 13}
           textAnchor="middle"
           fontFamily="var(--font-display)"
-          fontSize={13}
-          fontWeight={500}
+          fontSize={11}
+          fontWeight={600}
           fill={titleColor}
           style={{ pointerEvents: "none", userSelect: "none" }}
         >
-          {truncate(event.title, 28)}
+          {truncate(event.title, 32)}
         </text>
       </g>
     </g>

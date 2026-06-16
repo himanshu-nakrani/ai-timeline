@@ -35,46 +35,45 @@ export function FirstRunHint() {
 
   return (
     <div
-      className="pointer-events-auto fixed bottom-20 right-4 z-30 max-w-xs"
+      className="pointer-events-auto fixed bottom-20 right-4 z-30 max-w-xs rounded shadow-lg"
       style={{
-        background: PALETTE.parchment,
-        border: `1px solid ${PALETTE.ink}`,
-        padding: "12px 14px",
+        background: "rgba(18, 20, 31, 0.95)",
+        backdropFilter: "blur(12px)",
+        border: "1px solid rgba(255, 255, 255, 0.08)",
+        padding: "14px 16px",
       }}
       role="dialog"
       aria-label="How to navigate the map"
     >
       <div
-        className="text-[10px]"
+        className="text-[9px]"
         style={{
-          fontFamily: "var(--font-script)",
-          color: PALETTE.cinnabar,
-          letterSpacing: "0.22em",
-          fontWeight: 600,
+          fontFamily: "var(--font-mono)",
+          color: PALETTE.gold,
+          letterSpacing: "0.12em",
+          fontWeight: 700,
         }}
       >
-        NOTA BENE
+        NAVIGATION GUIDE
       </div>
       <div
-        className="mt-1 text-sm leading-snug"
-        style={{ fontFamily: "var(--font-display)", color: PALETTE.ink }}
+        className="mt-2 text-xs leading-relaxed"
+        style={{ fontFamily: "var(--font-sans)", color: PALETTE.inkSoft }}
       >
-        Scroll horizontally to travel through the years.
-        Click any landmark to read its dossier.
-        Arrow keys step between events.
+        Scroll horizontally to travel through the years. Click any event to view its details. Use arrow keys to step between points.
       </div>
       <button
         type="button"
         onClick={dismiss}
-        className="focus-ring mt-3 text-[10px] tracking-widest"
+        className="focus-ring mt-3 text-[9px] tracking-wider rounded transition-colors hover:bg-[rgba(255,255,255,0.05)]"
         style={{
           fontFamily: "var(--font-mono)",
           color: PALETTE.ink,
-          borderBottom: `1px solid ${PALETTE.ink}`,
-          paddingBottom: 1,
+          border: "1px solid rgba(255, 255, 255, 0.15)",
+          padding: "4px 10px",
         }}
       >
-        UNDERSTOOD
+        DISMISS
       </button>
     </div>
   );

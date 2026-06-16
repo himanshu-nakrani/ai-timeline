@@ -132,7 +132,7 @@ export function TempPadScrubber({ scrollRef }: ScrubberProps) {
       style={{
         height: DIMENSIONS.SCRUBBER_HEIGHT,
         background: PALETTE.parchment,
-        borderTop: `1px solid ${PALETTE.inkSoft}`,
+        borderTop: `1px solid rgba(255, 255, 255, 0.06)`,
       }}
       role="region"
       aria-label="Map scrubber"
@@ -141,9 +141,9 @@ export function TempPadScrubber({ scrollRef }: ScrubberProps) {
         <button
           type="button"
           onClick={reset}
-          className="focus-ring flex shrink-0 items-center gap-1.5 px-2.5 py-1.5 text-[11px] tracking-widest"
+          className="focus-ring flex shrink-0 items-center gap-1.5 px-2.5 py-1.5 text-[10px] tracking-widest rounded transition-colors hover:bg-[rgba(255,255,255,0.05)]"
           style={{
-            border: `1px solid ${PALETTE.ink}`,
+            border: `1px solid rgba(255, 255, 255, 0.12)`,
             color: PALETTE.ink,
             fontFamily: "var(--font-mono)",
             background: "transparent",
@@ -158,7 +158,7 @@ export function TempPadScrubber({ scrollRef }: ScrubberProps) {
           {/* Year-tooltip while hovering/dragging */}
           {hoverYear != null && (
             <div
-              className="pointer-events-none absolute -top-7 left-0 text-[10px]"
+              className="pointer-events-none absolute -top-8 left-0 text-[10px] rounded"
               style={{
                 transform: `translateX(${
                   // Convert year back to track-pct then to px
@@ -167,12 +167,13 @@ export function TempPadScrubber({ scrollRef }: ScrubberProps) {
                   100
                 }%)`,
                 marginLeft: -18,
-                fontFamily: "var(--font-script)",
-                color: PALETTE.ink,
-                background: PALETTE.parchment,
-                border: `1px solid ${PALETTE.ink}`,
-                padding: "2px 6px",
-                letterSpacing: 1.4,
+                fontFamily: "var(--font-mono)",
+                color: "#ffffff",
+                background: "rgba(18, 20, 31, 0.9)",
+                border: "1px solid rgba(255, 255, 255, 0.15)",
+                padding: "3px 6px",
+                letterSpacing: 1.2,
+                fontWeight: 600,
               }}
               aria-hidden
             >
@@ -183,9 +184,9 @@ export function TempPadScrubber({ scrollRef }: ScrubberProps) {
             ref={trackRef}
             className="relative h-7 w-full cursor-pointer touch-none"
             style={{
-              background: PALETTE.parchment,
-              borderTop: `1px solid ${PALETTE.inkSoft}`,
-              borderBottom: `1px solid ${PALETTE.inkSoft}`,
+              background: "rgba(255, 255, 255, 0.01)",
+              borderTop: `1px solid rgba(255, 255, 255, 0.06)`,
+              borderBottom: `1px solid rgba(255, 255, 255, 0.06)`,
             }}
             role="slider"
             aria-label="Seek through the map by year"
@@ -201,16 +202,17 @@ export function TempPadScrubber({ scrollRef }: ScrubberProps) {
                 <div key={d} aria-hidden>
                   <div
                     className="absolute top-0 h-full w-px"
-                    style={{ left: `${pct}%`, background: PALETTE.inkSoft }}
+                    style={{ left: `${pct}%`, background: "rgba(255, 255, 255, 0.08)" }}
                   />
                   <div
-                    className="absolute -bottom-3 text-[9px]"
+                    className="absolute -bottom-3.5 text-[8.5px]"
                     style={{
                       left: `${pct}%`,
                       transform: "translateX(-50%)",
-                      fontFamily: "var(--font-script)",
-                      color: PALETTE.inkFaint,
-                      letterSpacing: 1.4,
+                      fontFamily: "var(--font-mono)",
+                      color: PALETTE.inkSoft,
+                      letterSpacing: 1.0,
+                      fontWeight: 500,
                     }}
                   >
                     {d}
@@ -220,9 +222,10 @@ export function TempPadScrubber({ scrollRef }: ScrubberProps) {
             })}
             <div
               ref={playheadRef}
-              className="pointer-events-none absolute top-[-3px] h-[34px] w-[3px]"
+              className="pointer-events-none absolute top-[-3px] h-[34px] w-[2px]"
               style={{
-                background: PALETTE.cinnabar,
+                background: PALETTE.gold,
+                boxShadow: `0 0 8px ${PALETTE.goldBright}`,
                 willChange: "transform",
               }}
               aria-hidden
@@ -236,14 +239,12 @@ export function TempPadScrubber({ scrollRef }: ScrubberProps) {
               key={d}
               type="button"
               onClick={() => jump(d)}
-              className="focus-ring px-1.5 py-1 text-[10px] tracking-wider"
+              className="focus-ring px-2 py-1 text-[10px] tracking-wider rounded transition-colors hover:bg-[rgba(255,255,255,0.04)]"
               style={{
                 fontFamily: "var(--font-mono)",
-                color: PALETTE.ink,
+                color: PALETTE.inkSoft,
                 border: `1px solid transparent`,
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.borderColor = PALETTE.ink)}
-              onMouseLeave={(e) => (e.currentTarget.style.borderColor = "transparent")}
               aria-label={`Jump to the ${d}s`}
             >
               {String(d).slice(2)}s

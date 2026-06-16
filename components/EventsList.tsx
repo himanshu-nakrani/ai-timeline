@@ -67,39 +67,40 @@ export function EventsList({
       <header className="mb-10 text-center">
         <div
           style={{
-            fontFamily: "var(--font-script)",
-            letterSpacing: "0.22em",
-            color: PALETTE.cinnabar,
-            fontSize: 12,
+            fontFamily: "var(--font-mono)",
+            letterSpacing: "0.15em",
+            color: PALETTE.gold,
+            fontSize: 11,
+            fontWeight: 600,
           }}
         >
-          INDEX REGIONUM
+          CHRONOLOGY INDEX
         </div>
         <h1
           className="mt-2"
           style={{
             fontFamily: "var(--font-display)",
             color: PALETTE.ink,
-            fontSize: 44,
-            fontWeight: 600,
-            lineHeight: 1.05,
+            fontSize: 36,
+            fontWeight: 700,
+            lineHeight: 1.1,
           }}
         >
-          The Cartographer&rsquo;s Index
+          The Lineage Index
         </h1>
         <div
-          className="mt-1 italic"
-          style={{ fontFamily: "var(--font-script)", color: PALETTE.inkFaint }}
+          className="mt-2 text-sm opacity-80"
+          style={{ fontFamily: "var(--font-sans)", color: PALETTE.inkSoft }}
         >
-          Every landmark on the map, grouped by era.
+          Every major milestone in AI development, grouped by era.
         </div>
-        <div aria-hidden className="mx-auto mt-5 h-px w-32" style={{ background: PALETTE.inkSoft }} />
+        <div aria-hidden className="mx-auto mt-5 h-px w-32" style={{ background: "rgba(255, 255, 255, 0.1)" }} />
       </header>
 
       {/* Legend + filter row */}
       <div
         className="mb-8 flex flex-wrap items-center justify-between gap-3 border-y py-3"
-        style={{ borderColor: PALETTE.inkSoft }}
+        style={{ borderColor: "rgba(255, 255, 255, 0.08)" }}
       >
         <div className="flex flex-wrap items-center gap-3 text-[11px]">
           {(Object.keys(FATE_LABEL) as (keyof typeof FATE_LABEL)[]).map((k) => (
@@ -134,12 +135,14 @@ export function EventsList({
                   key={k}
                   type="button"
                   onClick={() => setFilter(k)}
-                  className="focus-ring px-2 py-1 text-[10px] tracking-widest"
+                  className="focus-ring px-2.5 py-1.5 text-[9px] tracking-widest rounded transition-all"
                   style={{
                     fontFamily: "var(--font-mono)",
-                    color: active ? PALETTE.parchment : PALETTE.ink,
-                    background: active ? PALETTE.ink : "transparent",
-                    border: `1px solid ${PALETTE.ink}`,
+                    color: active ? "#ffffff" : PALETTE.inkSoft,
+                    background: active ? "rgba(255, 255, 255, 0.08)" : "transparent",
+                    border: active
+                      ? "1px solid rgba(255, 255, 255, 0.25)"
+                      : "1px solid rgba(255, 255, 255, 0.08)",
                   }}
                   aria-pressed={active}
                 >
@@ -154,7 +157,7 @@ export function EventsList({
       {grouped.length === 0 && (
         <div
           className="py-16 text-center"
-          style={{ fontFamily: "var(--font-script)", color: PALETTE.inkFaint }}
+          style={{ fontFamily: "var(--font-mono)", color: PALETTE.inkSoft, fontSize: 13 }}
         >
           No landmarks of this kind.
         </div>
@@ -162,13 +165,14 @@ export function EventsList({
 
       {grouped.map(({ era, items }) => (
         <section key={era.from} className="mb-12">
-          <div className="mb-4 flex items-baseline gap-4 border-b pb-1.5" style={{ borderColor: PALETTE.inkSoft }}>
+          <div className="mb-4 flex items-baseline gap-4 border-b pb-1.5" style={{ borderColor: "rgba(255, 255, 255, 0.08)" }}>
             <div
               style={{
-                fontFamily: "var(--font-script)",
-                letterSpacing: "0.22em",
-                color: PALETTE.cinnabar,
-                fontSize: 12,
+                fontFamily: "var(--font-mono)",
+                letterSpacing: "0.1em",
+                color: PALETTE.gold,
+                fontSize: 11,
+                fontWeight: 600,
               }}
             >
               {era.label.toUpperCase()}
@@ -177,52 +181,53 @@ export function EventsList({
               style={{
                 fontFamily: "var(--font-display)",
                 color: PALETTE.ink,
-                fontSize: 22,
-                fontWeight: 600,
+                fontSize: 20,
+                fontWeight: 700,
               }}
             >
               {era.subtitle}
             </h2>
             <div
-              className="ml-auto text-[10px]"
-              style={{ fontFamily: "var(--font-mono)", color: PALETTE.inkFaint, letterSpacing: 1.2 }}
+              className="ml-auto text-[9px]"
+              style={{ fontFamily: "var(--font-mono)", color: PALETTE.inkSoft, letterSpacing: 1.2 }}
             >
               {era.from}–{era.to} · {items.length} {items.length === 1 ? "entry" : "entries"}
             </div>
           </div>
 
-          <ol className="space-y-2">
+          <ol className="space-y-2.5">
             {items.map((ev) => (
               <li key={ev.id}>
                 <button
                   type="button"
                   onClick={() => onSelect(ev.id)}
                   aria-label={`Open dossier: ${ev.title} (${ev.year})`}
-                  className="focus-ring group flex w-full items-start gap-4 px-3 py-3 text-left"
+                  className="focus-ring group flex w-full items-start gap-4 px-3 py-3 text-left rounded transition-all"
                   style={{
-                    border: `1px solid ${PALETTE.inkFaint}`,
+                    border: `1px solid rgba(255, 255, 255, 0.06)`,
                     background: "transparent",
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = PALETTE.ink)}
-                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = PALETTE.inkFaint)}
+                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.2)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.06)")}
                 >
                   <div className="flex w-16 shrink-0 flex-col items-start">
                     <span
                       style={{
-                        fontFamily: "var(--font-script)",
+                        fontFamily: "var(--font-mono)",
                         color: PALETTE.inkSoft,
-                        letterSpacing: 2,
-                        fontSize: 14,
+                        letterSpacing: 1.2,
+                        fontSize: 13,
+                        fontWeight: 600,
                       }}
                     >
                       {ev.year}
                     </span>
                     <span
                       aria-hidden
-                      className="mt-1.5 inline-block h-2.5 w-2.5"
+                      className="mt-1.5 inline-block h-2 w-2 rounded-full"
                       style={{
                         background: FATE_COLOR[ev.fate],
-                        border: `1px solid ${PALETTE.ink}`,
+                        border: `1px solid rgba(255, 255, 255, 0.25)`,
                       }}
                       title={FATE_LABEL[ev.fate]}
                     />
@@ -232,19 +237,19 @@ export function EventsList({
                       style={{
                         fontFamily: "var(--font-display)",
                         color: PALETTE.ink,
-                        fontSize: 18,
-                        fontWeight: 600,
+                        fontSize: 16,
+                        fontWeight: 700,
                         lineHeight: 1.2,
                       }}
                     >
                       {ev.title}
                     </div>
                     <div
-                      className="mt-1"
+                      className="mt-1 opacity-80"
                       style={{
-                        fontFamily: "var(--font-display)",
+                        fontFamily: "var(--font-sans)",
                         color: PALETTE.inkSoft,
-                        fontSize: 14.5,
+                        fontSize: 13,
                         lineHeight: 1.4,
                       }}
                     >

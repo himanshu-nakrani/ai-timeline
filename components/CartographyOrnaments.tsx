@@ -28,17 +28,20 @@ export function CartographyOrnaments({ stageHeight }: OrnamentsProps) {
 
   return (
     <g aria-hidden>
-      {/* Alternating lane band tints */}
+      {/* Alternating lane band tints — bumped to be visible against the
+          near-black background. Cyan-tinted trunk band anchors the canonical
+          lineage; rose-tinted abandoned band signals the graveyard; the rest
+          alternate subtly. */}
       {bands.map(({ lane, topY, bottomY }, i) => {
         const isTrunk = lane.id === "trunk";
         const isAbandoned = lane.id === "abandoned";
         const fill = isTrunk
-          ? "rgba(217, 175, 58, 0.07)" // gold wash for the canonical lane
+          ? "rgba(6, 182, 212, 0.06)"
           : isAbandoned
-            ? "rgba(179, 49, 36, 0.05)" // vermilion wash for the dragons' lane
+            ? "rgba(244, 63, 94, 0.05)"
             : i % 2 === 0
-              ? "rgba(94, 74, 42, 0.06)"
-              : "rgba(94, 74, 42, 0.00)";
+              ? "rgba(255, 255, 255, 0.02)"
+              : "rgba(255, 255, 255, 0.01)";
         return (
           <rect
             key={lane.id}
@@ -51,7 +54,8 @@ export function CartographyOrnaments({ stageHeight }: OrnamentsProps) {
         );
       })}
 
-      {/* Ink rules between lane bands (every band boundary except the very top). */}
+      {/* Rules between lane bands — bumped to 0.10 alpha so the lane system
+          reads as deliberate. */}
       {bands.slice(1).map(({ lane, topY }) => (
         <line
           key={`rule-${lane.id}`}
@@ -59,43 +63,54 @@ export function CartographyOrnaments({ stageHeight }: OrnamentsProps) {
           y1={topY}
           x2={w}
           y2={topY}
-          stroke={PALETTE.inkSoft}
-          strokeWidth={0.35}
-          opacity={0.4}
+          stroke="rgba(255, 255, 255, 0.10)"
+          strokeWidth={0.7}
         />
       ))}
 
       {/* Top year ruler */}
       <RuledBand y={32} w={w} />
 
-      {/* Decade labels above the ruler */}
+      {/* Decade labels above the ruler, with a thin anchor line down to the trunk
+          so each decade visibly connects to its year. */}
       {decs.map((d) => (
-        <text
-          key={d}
-          x={yearToX(d)}
-          y={22}
-          textAnchor="middle"
-          fontFamily="var(--font-script)"
-          fontSize={12}
-          fill={PALETTE.inkSoft}
-          letterSpacing={3}
-        >
-          {d}s
-        </text>
+        <g key={d}>
+          <text
+            x={yearToX(d)}
+            y={20}
+            textAnchor="middle"
+            fontFamily="var(--font-mono)"
+            fontSize={11}
+            fontWeight={600}
+            fill={PALETTE.ink}
+            letterSpacing={1.5}
+          >
+            {d}
+          </text>
+          <line
+            x1={yearToX(d)}
+            y1={26}
+            x2={yearToX(d)}
+            y2={44}
+            stroke={PALETTE.inkFaint}
+            strokeOpacity={0.45}
+            strokeWidth={0.6}
+          />
+        </g>
       ))}
 
-      {/* "Terra incognita →" anchored a safe distance above the abandoned lane. */}
+      {/* Horizon label */}
       <text
         x={w - 12}
         y={Math.min(stageHeight - 24, abandonedLaneY - 28)}
         textAnchor="end"
-        fontFamily="var(--font-script)"
-        fontSize={16}
-        fill={PALETTE.cinnabar}
-        fontStyle="italic"
-        opacity={0.85}
+        fontFamily="var(--font-mono)"
+        fontSize={10}
+        fill={PALETTE.inkSoft}
+        letterSpacing={1.2}
+        opacity={0.6}
       >
-        Terra incognita →
+        FUTURE HORIZON →
       </text>
     </g>
   );
@@ -109,16 +124,18 @@ function RuledBand({ y, w }: { y: number; w: number }) {
   }
   return (
     <g aria-hidden>
-      <line x1={0} y1={y} x2={w} y2={y} stroke={PALETTE.inkSoft} strokeWidth={0.6} />
+      {/* Top rule line — slightly brighter than the lane separators. */}
+      <line x1={0} y1={y} x2={w} y2={y} stroke="rgba(255, 255, 255, 0.18)" strokeWidth={0.8} />
       {ticks.map((t) => (
         <line
           key={t.x}
           x1={t.x}
           y1={y}
           x2={t.x}
-          y2={y + (t.major ? 7 : 3)}
-          stroke={PALETTE.inkSoft}
-          strokeWidth={t.major ? 0.7 : 0.4}
+          y2={y + (t.major ? 10 : 3)}
+          // Major ticks are 2.5x more visible than minor ones.
+          stroke={t.major ? "rgba(255, 255, 255, 0.45)" : "rgba(255, 255, 255, 0.1)"}
+          strokeWidth={t.major ? 1.2 : 0.4}
         />
       ))}
     </g>

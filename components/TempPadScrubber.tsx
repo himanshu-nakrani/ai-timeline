@@ -1,0 +1,256 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { decades, yearToX } from "@/lib/layout";
+import { DIMENSIONS, PALETTE } from "@/lib/constants";
+
+interface ScrubberProps {
+  scrollRef: React.RefObject<HTMLDivElement | null>;
+}
+
+/**
+ * A brass-rule scrubber pinned to the bottom of the map. The playhead is
+ * draggable and shows the current year while dragging. Decade chips
+ * provide quick jumps; on mobile they fall to a compact wrap row.
+ */
+export function TempPadScrubber({ scrollRef }: ScrubberProps) {
+  const playheadRef = useRef<HTMLDivElement | null>(null);
+  const trackRef = useRef<HTMLDivElement | null>(null);
+  const draggingRef = useRef(false);
+  const [hoverYear, setHoverYear] = useState<number | null>(null);
+
+  // Sync playhead to scroll position.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    let scrollMax = Math.max(1, el.scrollWidth - el.clientWidth);
+    let trackWidth = trackRef.current ? trackRef.current.clientWidth - 2 : 0;
+    const measure = () => {
+      scrollMax = Math.max(1, el.scrollWidth - el.clientWidth);
+      trackWidth = trackRef.current ? trackRef.current.clientWidth - 2 : 0;
+    };
+
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        if (!playheadRef.current) return;
+        const pct = el.scrollLeft / scrollMax;
+        playheadRef.current.style.transform = `translate3d(${pct * trackWidth}px, 0, 0)`;
+      });
+    };
+
+    const ro = new ResizeObserver(() => {
+      measure();
+      onScroll();
+    });
+    ro.observe(el);
+    if (trackRef.current) ro.observe(trackRef.current);
+
+    el.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      ro.disconnect();
+      cancelAnimationFrame(raf);
+    };
+  }, [scrollRef]);
+
+  // Drag-to-seek on the track.
+  useEffect(() => {
+    const track = trackRef.current;
+    const el = scrollRef.current;
+    if (!track || !el) return;
+
+    const pctFromEvent = (clientX: number) => {
+      const r = track.getBoundingClientRect();
+      const x = Math.max(0, Math.min(r.width, clientX - r.left));
+      return x / Math.max(1, r.width);
+    };
+
+    const yearFromPct = (pct: number) => {
+      return DIMENSIONS.MIN_YEAR + pct * (DIMENSIONS.MAX_YEAR - DIMENSIONS.MIN_YEAR);
+    };
+
+    const seekToPct = (pct: number) => {
+      const scrollMax = Math.max(1, el.scrollWidth - el.clientWidth);
+      el.scrollLeft = pct * scrollMax;
+    };
+
+    const onPointerDown = (e: PointerEvent) => {
+      draggingRef.current = true;
+      track.setPointerCapture(e.pointerId);
+      const pct = pctFromEvent(e.clientX);
+      seekToPct(pct);
+      setHoverYear(yearFromPct(pct));
+    };
+    const onPointerMove = (e: PointerEvent) => {
+      const pct = pctFromEvent(e.clientX);
+      if (draggingRef.current) {
+        seekToPct(pct);
+        setHoverYear(yearFromPct(pct));
+      } else {
+        // Hover preview (mouse only).
+        if (e.pointerType === "mouse") setHoverYear(yearFromPct(pct));
+      }
+    };
+    const onPointerUp = (e: PointerEvent) => {
+      draggingRef.current = false;
+      track.releasePointerCapture?.(e.pointerId);
+    };
+    const onPointerLeave = () => {
+      if (!draggingRef.current) setHoverYear(null);
+    };
+
+    track.addEventListener("pointerdown", onPointerDown);
+    track.addEventListener("pointermove", onPointerMove);
+    track.addEventListener("pointerup", onPointerUp);
+    track.addEventListener("pointercancel", onPointerUp);
+    track.addEventListener("pointerleave", onPointerLeave);
+    return () => {
+      track.removeEventListener("pointerdown", onPointerDown);
+      track.removeEventListener("pointermove", onPointerMove);
+      track.removeEventListener("pointerup", onPointerUp);
+      track.removeEventListener("pointercancel", onPointerUp);
+      track.removeEventListener("pointerleave", onPointerLeave);
+    };
+  }, [scrollRef]);
+
+  const jump = (year: number) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const target = yearToX(year);
+    el.scrollTo({ left: Math.max(0, target - 80), behavior: "smooth" });
+  };
+
+  const reset = () => jump(DIMENSIONS.MIN_YEAR);
+  const decs = decades();
+
+  return (
+    <div
+      className="fixed inset-x-0 bottom-0 z-30"
+      style={{
+        height: DIMENSIONS.SCRUBBER_HEIGHT,
+        background: PALETTE.parchment,
+        borderTop: `1px solid ${PALETTE.inkSoft}`,
+      }}
+      role="region"
+      aria-label="Map scrubber"
+    >
+      <div className="mx-auto flex h-full max-w-[1600px] items-center gap-3 px-4 sm:gap-4 sm:px-6">
+        <button
+          type="button"
+          onClick={reset}
+          className="focus-ring flex shrink-0 items-center gap-1.5 px-2.5 py-1.5 text-[11px] tracking-widest"
+          style={{
+            border: `1px solid ${PALETTE.ink}`,
+            color: PALETTE.ink,
+            fontFamily: "var(--font-mono)",
+            background: "transparent",
+          }}
+          aria-label="Return to the start of the map"
+        >
+          <span aria-hidden>⟸</span>
+          START
+        </button>
+
+        <div className="relative flex-1">
+          {/* Year-tooltip while hovering/dragging */}
+          {hoverYear != null && (
+            <div
+              className="pointer-events-none absolute -top-7 left-0 text-[10px]"
+              style={{
+                transform: `translateX(${
+                  // Convert year back to track-pct then to px
+                  ((hoverYear - DIMENSIONS.MIN_YEAR) /
+                    (DIMENSIONS.MAX_YEAR - DIMENSIONS.MIN_YEAR)) *
+                  100
+                }%)`,
+                marginLeft: -18,
+                fontFamily: "var(--font-script)",
+                color: PALETTE.ink,
+                background: PALETTE.parchment,
+                border: `1px solid ${PALETTE.ink}`,
+                padding: "2px 6px",
+                letterSpacing: 1.4,
+              }}
+              aria-hidden
+            >
+              {Math.round(hoverYear)}
+            </div>
+          )}
+          <div
+            ref={trackRef}
+            className="relative h-7 w-full cursor-pointer touch-none"
+            style={{
+              background: PALETTE.parchment,
+              borderTop: `1px solid ${PALETTE.inkSoft}`,
+              borderBottom: `1px solid ${PALETTE.inkSoft}`,
+            }}
+            role="slider"
+            aria-label="Seek through the map by year"
+            aria-valuemin={DIMENSIONS.MIN_YEAR}
+            aria-valuemax={DIMENSIONS.MAX_YEAR}
+            aria-valuenow={hoverYear ?? DIMENSIONS.MIN_YEAR}
+            tabIndex={0}
+          >
+            {decs.map((d) => {
+              const pct =
+                ((d - DIMENSIONS.MIN_YEAR) / (DIMENSIONS.MAX_YEAR - DIMENSIONS.MIN_YEAR)) * 100;
+              return (
+                <div key={d} aria-hidden>
+                  <div
+                    className="absolute top-0 h-full w-px"
+                    style={{ left: `${pct}%`, background: PALETTE.inkSoft }}
+                  />
+                  <div
+                    className="absolute -bottom-3 text-[9px]"
+                    style={{
+                      left: `${pct}%`,
+                      transform: "translateX(-50%)",
+                      fontFamily: "var(--font-script)",
+                      color: PALETTE.inkFaint,
+                      letterSpacing: 1.4,
+                    }}
+                  >
+                    {d}
+                  </div>
+                </div>
+              );
+            })}
+            <div
+              ref={playheadRef}
+              className="pointer-events-none absolute top-[-3px] h-[34px] w-[3px]"
+              style={{
+                background: PALETTE.cinnabar,
+                willChange: "transform",
+              }}
+              aria-hidden
+            />
+          </div>
+        </div>
+
+        <div className="hidden shrink-0 gap-1 md:flex">
+          {decs.map((d) => (
+            <button
+              key={d}
+              type="button"
+              onClick={() => jump(d)}
+              className="focus-ring px-1.5 py-1 text-[10px] tracking-wider"
+              style={{
+                fontFamily: "var(--font-mono)",
+                color: PALETTE.ink,
+                border: `1px solid transparent`,
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.borderColor = PALETTE.ink)}
+              onMouseLeave={(e) => (e.currentTarget.style.borderColor = "transparent")}
+              aria-label={`Jump to the ${d}s`}
+            >
+              {String(d).slice(2)}s
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

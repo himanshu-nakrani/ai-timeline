@@ -1,18 +1,18 @@
 @import "tailwindcss";
 
 @theme {
-  --color-mappa-parchment: #090a0f;
-  --color-mappa-parchment-deep: #12141f;
-  --color-mappa-ink: #f3f4f6;
-  --color-mappa-ink-soft: #9ca3af;
-  --color-mappa-ink-faint: #6b7280;
-  --color-mappa-gold: #06b6d4;
-  --color-mappa-gold-bright: #22d3ee;
-  --color-mappa-vermilion: #f43f5e;
-  --color-mappa-cinnabar: #fb7185;
-  --color-mappa-blue: #10b981;
-  --color-mappa-blue-bright: #34d399;
-  --color-mappa-wax: #6366f1;
+  --color-lineage-parchment: #090a0f;
+  --color-lineage-parchment-deep: #12141f;
+  --color-lineage-ink: #f3f4f6;
+  --color-lineage-ink-soft: #9ca3af;
+  --color-lineage-ink-faint: #6b7280;
+  --color-lineage-gold: #06b6d4;
+  --color-lineage-gold-bright: #22d3ee;
+  --color-lineage-vermilion: #f43f5e;
+  --color-lineage-cinnabar: #fb7185;
+  --color-lineage-blue: #10b981;
+  --color-lineage-blue-bright: #34d399;
+  --color-lineage-wax: #6366f1;
 
   --font-display: var(--font-display), "Inter", system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-mono), "JetBrains Mono", ui-monospace, monospace;
@@ -21,26 +21,26 @@
 }
 
 :root {
-  --mappa-parchment: #090a0f;
-  --mappa-parchment-deep: #12141f;
-  --mappa-ink: #f3f4f6;
-  --mappa-ink-soft: #9ca3af;
-  --mappa-ink-faint: #6b7280;
-  --mappa-gold: #06b6d4;
-  --mappa-gold-bright: #22d3ee;
-  --mappa-vermilion: #f43f5e;
-  --mappa-cinnabar: #fb7185;
-  --mappa-blue: #10b981;
-  --mappa-blue-bright: #34d399;
-  --mappa-wax: #6366f1;
+  --lineage-parchment: #090a0f;
+  --lineage-parchment-deep: #12141f;
+  --lineage-ink: #f3f4f6;
+  --lineage-ink-soft: #9ca3af;
+  --lineage-ink-faint: #6b7280;
+  --lineage-gold: #06b6d4;
+  --lineage-gold-bright: #22d3ee;
+  --lineage-vermilion: #f43f5e;
+  --lineage-cinnabar: #fb7185;
+  --lineage-blue: #10b981;
+  --lineage-blue-bright: #34d399;
+  --lineage-wax: #6366f1;
 
   color-scheme: dark;
 }
 
 html,
 body {
-  background: var(--mappa-parchment);
-  color: var(--mappa-ink);
+  background: var(--lineage-parchment);
+  color: var(--lineage-ink);
   font-family: var(--font-sans);
   margin: 0;
   padding: 0;
@@ -54,7 +54,7 @@ body[data-view="graph"] {
 }
 body[data-view="list"] {
   overflow-y: auto;
-  background: var(--mappa-parchment);
+  background: var(--lineage-parchment);
 }
 
 * {
@@ -79,8 +79,8 @@ button {
 }
 
 /* Minimal digital void background with subtle dot grid. */
-.mappa-parchment-bg {
-  background-color: var(--mappa-parchment);
+.lineage-parchment-bg {
+  background-color: var(--lineage-parchment);
   background-image: 
     radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
     radial-gradient(circle at 30% 20%, rgba(6, 182, 212, 0.04) 0%, transparent 50%),
@@ -95,18 +95,38 @@ button {
   stroke-linejoin: round;
   transition: opacity 240ms ease;
 }
-.branch-active   { stroke: var(--mappa-blue);          stroke-width: 2.0; filter: drop-shadow(0 0 3px rgba(16, 185, 129, 0.3)); }
-.branch-rejoined { stroke: var(--mappa-wax);           stroke-width: 1.8; filter: drop-shadow(0 0 2px rgba(99, 102, 241, 0.2)); }
-.branch-pruned   { stroke: var(--mappa-vermilion);     stroke-width: 1.5; stroke-dasharray: 4 4; filter: drop-shadow(0 0 2px rgba(244, 63, 94, 0.2)); }
-.branch-constrains { stroke: #f59e0b;                  stroke-width: 1.8; stroke-dasharray: 6 3; filter: drop-shadow(0 0 3px rgba(245, 158, 11, 0.35)); }
+.branch-active   { stroke: var(--lineage-blue);          stroke-width: 2.0; filter: drop-shadow(0 0 3px rgba(16, 185, 129, 0.3)); }
+.branch-rejoined { stroke: var(--lineage-wax);           stroke-width: 1.8; filter: drop-shadow(0 0 2px rgba(99, 102, 241, 0.2)); }
+.branch-pruned   { stroke: var(--lineage-vermilion);     stroke-width: 1.5; stroke-dasharray: 4 4; filter: drop-shadow(0 0 2px rgba(244, 63, 94, 0.2)); }
+.branch-constrains { stroke: #f59e0b;                    stroke-width: 1.8; stroke-dasharray: 6 3; filter: drop-shadow(0 0 3px rgba(245, 158, 11, 0.35)); }
 
 /* Focus ring — crisp cyan glow for digital aesthetic. */
 .focus-ring:focus-visible {
-  outline: 2px solid var(--mappa-gold);
+  outline: 2px solid var(--lineage-gold);
   outline-offset: 3px;
 }
 .case-paper .focus-ring:focus-visible {
   outline-color: var(--paper-ink);
+}
+
+/* SVG <g> elements don't reliably render CSS outline across browsers. Use a
+   stroke on a hidden "halo" circle that we toggle via focus-within. */
+.event-node { cursor: pointer; }
+.event-node:focus { outline: none; }
+.event-node .focus-halo {
+  fill: none;
+  stroke: var(--lineage-gold);
+  stroke-width: 2;
+  stroke-opacity: 0;
+  transition: stroke-opacity 120ms ease;
+}
+.event-node:focus .focus-halo,
+.event-node:focus-within .focus-halo {
+  stroke-opacity: 1;
+  filter: drop-shadow(0 0 4px var(--lineage-gold-bright));
+}
+@media (prefers-reduced-motion: reduce) {
+  .event-node .focus-halo { transition: none; }
 }
 
 /* Hide native scrollbar on the timeline scroller — the custom TempPad
@@ -141,11 +161,11 @@ button {
 /* Case file modal: premium glassmorphism. */
 .case-paper {
   --paper-bg: rgba(15, 17, 26, 0.9);
-  --paper-ink: var(--mappa-ink);
-  --paper-ink-soft: var(--mappa-ink-soft);
+  --paper-ink: var(--lineage-ink);
+  --paper-ink-soft: var(--lineage-ink-soft);
   --paper-rule: rgba(255, 255, 255, 0.08);
-  --paper-meta: var(--mappa-ink-faint);
-  --paper-meta-soft: var(--mappa-ink-faint);
+  --paper-meta: var(--lineage-ink-faint);
+  --paper-meta-soft: var(--lineage-ink-faint);
   background-color: var(--paper-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -157,7 +177,7 @@ button {
 
 .wax-seal {
   background: rgba(255, 255, 255, 0.04);
-  color: var(--mappa-gold-bright);
+  color: var(--lineage-gold-bright);
   font-family: var(--font-mono);
   border: 1px solid rgba(255, 255, 255, 0.08);
   letter-spacing: 0.1em;

@@ -16,6 +16,9 @@ import { LaneRail } from "./LaneRail";
 import { FirstRunHint } from "./FirstRunHint";
 
 const DRAG_THRESHOLD_PX = 4;
+/** Window after a drag-release during which click events are suppressed, so a
+ *  small involuntary drag at the end of a pan does not also open a dossier. */
+const POST_PAN_CLICK_SUPPRESS_MS = 200;
 
 /** Live stage height = viewport - header - scrubber, clamped to a minimum. */
 function computeStageHeight(): number {
@@ -36,6 +39,10 @@ export function Timeline() {
 
   useEffect(() => {
     document.body.dataset.view = view;
+    return () => {
+      // Don't leave a stale data-view attribute on <body> after unmount.
+      delete document.body.dataset.view;
+    };
   }, [view]);
 
   // Live stage height: recompute on resize.
@@ -159,9 +166,15 @@ export function Timeline() {
     return () => window.removeEventListener("keydown", onKey);
   }, [selectedId, eventXs]);
 
-  // Autoplay: rAF scroll. Pauses when a dossier is open.
+  // Autoplay: rAF scroll. Pauses when a dossier is open or when the user
+  // prefers reduced motion (continuous motion is a known vestibular trigger).
   useEffect(() => {
     if (!autoplay || selectedId) return;
+    if (typeof window !== "undefined" &&
+        window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+      setAutoplay(false);
+      return;
+    }
     const el = scrollRef.current;
     if (!el) return;
     let raf = 0;
@@ -183,7 +196,7 @@ export function Timeline() {
   const selected = selectedId ? byId.get(selectedId) ?? null : null;
   const handleSelect = useCallback((id: string) => {
     // Suppress clicks that come immediately after a drag-pan release.
-    if (performance.now() - lastPanEndAt.current < 200) return;
+    if (performance.now() - lastPanEndAt.current < POST_PAN_CLICK_SUPPRESS_MS) return;
     setSelectedId(id);
   }, []);
   const handleClose = useCallback(() => setSelectedId(null), []);
@@ -203,7 +216,7 @@ export function Timeline() {
 
   if (view === "list") {
     return (
-      <div className="relative z-10 min-h-screen pb-24 pt-20">
+      <div className="relative z-10 min-h-screen pt-20">
         <GridBackdrop scrollRef={null} />
         <Header view={view} onView={setView} autoplay={autoplay} onAutoplay={() => setAutoplay((a) => !a)} />
         <main className="relative z-10">
@@ -251,7 +264,6 @@ export function Timeline() {
               <Branch
                 key={p.event.id}
                 placement={p}
-                scrollRef={scrollRef}
                 onSelect={handleSelect}
               />
             ))}
@@ -343,7 +355,12 @@ function Header({
             </ChromeButton>
           )}
           <ChromeButton
-            onClick={() => onView(view === "graph" ? "list" : "graph")}
+            onClick={() => {
+              // Stop the autoplay rAF if it's running; it has nothing to scroll
+              // to once the list view mounts.
+              if (view === "graph" && autoplay) onAutoplay();
+              onView(view === "graph" ? "list" : "graph");
+            }}
             aria-label={view === "list" ? "Return to the map" : "Open the index"}
             aria-pressed={view === "list"}
             glyph={view === "list" ? "✦" : "≡"}

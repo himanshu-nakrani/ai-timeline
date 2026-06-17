@@ -92,7 +92,7 @@ export function SacredTrunk({ stageHeight, trunkEvents, onSelect }: SacredTrunkP
           <g
             key={ev.id}
             transform={`translate(${x} ${trunkYPx})`}
-            className="cursor-pointer focus-ring outline-none"
+            className="event-node focus-ring"
             tabIndex={0}
             role="button"
             aria-label={`${ev.title} (${ev.year}) — Canonical${ev.nexus ? " · nexus event" : ""}`}
@@ -104,6 +104,18 @@ export function SacredTrunk({ stageHeight, trunkEvents, onSelect }: SacredTrunkP
               }
             }}
           >
+            {/* Invisible focus halo — styled via .event-node:focus in globals.css */}
+            <circle r={DIMENSIONS.NEXUS_RADIUS + 4} className="focus-halo" aria-hidden />
+            {/* Transparent hitbox so clicking the trunk line or the year/title
+                text all routes to the event, not just the label. */}
+            <rect
+              x={-44}
+              y={Math.min(yearOffset, titleOffset) - 8}
+              width={88}
+              height={Math.abs(titleOffset - yearOffset) + 16}
+              fill="transparent"
+              aria-hidden
+            />
             {showLeader && (
               <line
                 x1={0}

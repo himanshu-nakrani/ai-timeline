@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useLayoutEffect, useRef } from "react";
-import type { TimelineEvent } from "@/lib/events";
+import type { BranchFate, TimelineEvent } from "@/lib/events";
 import { EVENTS } from "@/lib/events";
 import { PALETTE } from "@/lib/constants";
 
@@ -17,7 +17,7 @@ interface CaseFileProps {
   canViewOnMap?: boolean;
 }
 
-const FATE_LABEL: Record<string, string> = {
+const FATE_LABEL: Record<BranchFate, string> = {
   trunk: "Canonical · part of the Via Aurea",
   active: "Active expedition · still sailing",
   rejoined: "Returned · absorbed into the main route",
@@ -25,7 +25,7 @@ const FATE_LABEL: Record<string, string> = {
   constrains: "Constraint · shapes the route",
 };
 
-const CATEGORY_LABEL: Record<string, string> = {
+const CATEGORY_LABEL: Record<TimelineEvent["category"], string> = {
   foundational: "Foundational breakthrough",
   product: "Product or deployed model",
   abandoned: "Abandoned approach",
@@ -33,7 +33,7 @@ const CATEGORY_LABEL: Record<string, string> = {
   hardware: "Hardware leap",
 };
 
-const FATE_SEAL: Record<string, string> = {
+const FATE_SEAL: Record<BranchFate, string> = {
   trunk: "VIA AUREA",
   active: "EXPEDITIO",
   rejoined: "RECEPTUS",
@@ -101,6 +101,11 @@ export function CaseFile({ event, onClose, onViewOnMap, canViewOnMap }: CaseFile
     return EVENTS.find((e) => e.id === id)?.title;
   };
 
+  // Honor prefers-reduced-motion: crossfade the panel in place instead of
+  // sliding it up (avoids a known vestibular trigger).
+  const reduced =
+    typeof window !== "undefined" &&
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
   return (
     <AnimatePresence>
       {event && (
@@ -112,7 +117,7 @@ export function CaseFile({ event, onClose, onViewOnMap, canViewOnMap }: CaseFile
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
+            transition={{ duration: reduced ? 0 : 0.18 }}
             onClick={onClose}
             aria-hidden
           />
@@ -123,10 +128,10 @@ export function CaseFile({ event, onClose, onViewOnMap, canViewOnMap }: CaseFile
             aria-modal="true"
             aria-labelledby="case-file-title"
             className="case-paper fixed inset-x-0 bottom-0 z-50 max-h-[82vh] overflow-y-auto"
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ duration: 0.22, ease: [0.2, 0.8, 0.2, 1] }}
+            initial={reduced ? { opacity: 0 } : { y: "100%" }}
+            animate={reduced ? { opacity: 1 } : { y: 0 }}
+            exit={reduced ? { opacity: 0 } : { y: "100%" }}
+            transition={{ duration: reduced ? 0 : 0.22, ease: [0.2, 0.8, 0.2, 1] }}
           >
             <div className="mx-auto max-w-4xl px-6 py-8 sm:px-12 sm:py-10">
               <div className="flex items-start justify-between gap-8">
@@ -186,7 +191,7 @@ export function CaseFile({ event, onClose, onViewOnMap, canViewOnMap }: CaseFile
                 </div>
 
                 <div className="flex flex-col items-end gap-3">
-                  <StatusBadge label={FATE_SEAL[event.fate] ?? "MARK"} />
+                  <StatusBadge label={FATE_SEAL[event.fate]} />
                   <button
                     type="button"
                     onClick={onClose}
@@ -252,8 +257,8 @@ export function CaseFile({ event, onClose, onViewOnMap, canViewOnMap }: CaseFile
                   SOURCES & REFERENCES
                 </div>
                 <ul className="mt-2 space-y-1.5">
-                  {event.sources.map((s, i) => (
-                    <li key={i}>
+                  {event.sources.map((s) => (
+                    <li key={s.url}>
                       <a
                         href={s.url}
                         target="_blank"

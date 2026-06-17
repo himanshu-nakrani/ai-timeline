@@ -18,8 +18,12 @@ export function GridBackdrop({ scrollRef }: GridBackdropProps) {
     const el = scrollRef.current;
     if (!el) return;
     let raf = 0;
+    // Continuous parallax is a known vestibular trigger; hold the grain
+    // static for users who prefer reduced motion.
+    const reduced =
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
     const onScroll = () => {
-      if (!grainRef.current) return;
+      if (!grainRef.current || reduced) return;
       const x = el.scrollLeft;
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => {
@@ -39,7 +43,7 @@ export function GridBackdrop({ scrollRef }: GridBackdropProps) {
     <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
       <div
         ref={grainRef}
-        className="mappa-parchment-bg absolute -left-[400px] -top-[200px] h-[calc(100%+400px)] w-[calc(100%+2400px)]"
+        className="lineage-parchment-bg absolute -left-[400px] -top-[200px] h-[calc(100%+400px)] w-[calc(100%+2400px)]"
         style={{ willChange: "transform" }}
         aria-hidden
       />

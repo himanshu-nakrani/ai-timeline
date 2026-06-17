@@ -79,9 +79,11 @@ export const LANE_BY_ID: Record<LaneId, LaneDef> = LANES.reduce(
 export const TIMING = {
   AUTOSCROLL_PX_PER_SEC: 90,
   CASE_FILE_OPEN_MS: 220,
-  HINT_OVERLAY_KEY: "mappa-hint-dismissed-v1",
+  HINT_OVERLAY_KEY: "lineage-hint-dismissed-v1",
 } as const;
 
 export const FLAGS = {
-  SHOW_MASCOT: false, // Turn off astrolabe in minimal pivot
+  // The astrolabe corner mascot. Off by default; opt in at build time with
+  // NEXT_PUBLIC_SHOW_MASCOT=1 (e.g. for marketing screenshots).
+  SHOW_MASCOT: process.env.NEXT_PUBLIC_SHOW_MASCOT === "1",
 } as const;

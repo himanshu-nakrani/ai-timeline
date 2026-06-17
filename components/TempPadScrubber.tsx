@@ -17,7 +17,15 @@ export function TempPadScrubber({ scrollRef }: ScrubberProps) {
   const playheadRef = useRef<HTMLDivElement | null>(null);
   const trackRef = useRef<HTMLDivElement | null>(null);
   const draggingRef = useRef(false);
+  // Mirror hoverYear into a ref so the keyboard handler can read the latest
+  // value without re-binding its listener on every mouse move.
+  const hoverYearRef = useRef<number | null>(null);
   const [hoverYear, setHoverYear] = useState<number | null>(null);
+  // All setHoverYear calls go through this wrapper so the ref stays in sync.
+  const updateHoverYear = (y: number | null) => {
+    hoverYearRef.current = y;
+    updateHoverYear(y);
+  };
 
   // Sync playhead to scroll position.
   useEffect(() => {
@@ -56,7 +64,8 @@ export function TempPadScrubber({ scrollRef }: ScrubberProps) {
     };
   }, [scrollRef]);
 
-  // Drag-to-seek on the track.
+  // Pointer-and-keyboard handlers for the track. Pointer for mouse/touch
+  // drag-to-seek; keyboard for Arrow / Home / End accessibility.
   useEffect(() => {
     const track = trackRef.current;
     const el = scrollRef.current;
@@ -82,16 +91,16 @@ export function TempPadScrubber({ scrollRef }: ScrubberProps) {
       track.setPointerCapture(e.pointerId);
       const pct = pctFromEvent(e.clientX);
       seekToPct(pct);
-      setHoverYear(yearFromPct(pct));
+      updateHoverYear(yearFromPct(pct));
     };
     const onPointerMove = (e: PointerEvent) => {
       const pct = pctFromEvent(e.clientX);
       if (draggingRef.current) {
         seekToPct(pct);
-        setHoverYear(yearFromPct(pct));
+        updateHoverYear(yearFromPct(pct));
       } else {
         // Hover preview (mouse only).
-        if (e.pointerType === "mouse") setHoverYear(yearFromPct(pct));
+        if (e.pointerType === "mouse") updateHoverYear(yearFromPct(pct));
       }
     };
     const onPointerUp = (e: PointerEvent) => {
@@ -99,8 +108,27 @@ export function TempPadScrubber({ scrollRef }: ScrubberProps) {
       track.releasePointerCapture?.(e.pointerId);
     };
     const onPointerLeave = () => {
-      if (!draggingRef.current) setHoverYear(null);
+      if (!draggingRef.current) updateHoverYear(null);
     };
+
+    // Keyboard handler: Arrow keys nudge by one year, Shift+Arrow by 10,
+    // Home/End jump to the start/end of the timeline.
+    const onKey = (e: KeyboardEvent) => {
+      const step = e.shiftKey ? 10 : 1;
+      const seekToYear = (year: number) => {
+        const clamped = Math.max(DIMENSIONS.MIN_YEAR, Math.min(DIMENSIONS.MAX_YEAR, year));
+        const scrollMax = Math.max(1, el.scrollWidth - el.clientWidth);
+        const pct = (clamped - DIMENSIONS.MIN_YEAR) / (DIMENSIONS.MAX_YEAR - DIMENSIONS.MIN_YEAR);
+        el.scrollLeft = pct * scrollMax;
+        updateHoverYear(clamped);
+      };
+      const current = hoverYearRef.current ?? DIMENSIONS.MIN_YEAR;
+      if (e.key === "ArrowRight") { e.preventDefault(); seekToYear(current + step); }
+      else if (e.key === "ArrowLeft") { e.preventDefault(); seekToYear(current - step); }
+      else if (e.key === "Home") { e.preventDefault(); seekToYear(DIMENSIONS.MIN_YEAR); }
+      else if (e.key === "End") { e.preventDefault(); seekToYear(DIMENSIONS.MAX_YEAR); }
+    };
+    track.addEventListener("keydown", onKey);
 
     track.addEventListener("pointerdown", onPointerDown);
     track.addEventListener("pointermove", onPointerMove);
@@ -108,6 +136,7 @@ export function TempPadScrubber({ scrollRef }: ScrubberProps) {
     track.addEventListener("pointercancel", onPointerUp);
     track.addEventListener("pointerleave", onPointerLeave);
     return () => {
+      track.removeEventListener("keydown", onKey);
       track.removeEventListener("pointerdown", onPointerDown);
       track.removeEventListener("pointermove", onPointerMove);
       track.removeEventListener("pointerup", onPointerUp);

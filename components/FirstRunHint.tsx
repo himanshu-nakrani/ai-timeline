@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { PALETTE, TIMING } from "@/lib/constants";
 
 /**
@@ -11,6 +11,9 @@ export function FirstRunHint() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    // Guard for non-browser environments (defensive — useEffect only runs
+    // client-side, but be explicit so the try/catch stays a pure safety net).
+    if (typeof window === "undefined") return;
     try {
       if (!localStorage.getItem(TIMING.HINT_OVERLAY_KEY)) {
         // Defer a tick so the map paints first.
@@ -20,6 +23,15 @@ export function FirstRunHint() {
     } catch {
       setVisible(true);
     }
+  }, []);
+
+  const dismiss = useCallback(() => {
+    try {
+      localStorage.setItem(TIMING.HINT_OVERLAY_KEY, "1");
+    } catch {
+      // no-op
+    }
+    setVisible(false);
   }, []);
 
   // Listen for Escape to dismiss, in addition to the button.
@@ -33,18 +45,7 @@ export function FirstRunHint() {
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-    // dismiss is stable (defined below) and doesn't capture additional deps.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible]);
-
-  const dismiss = () => {
-    try {
-      localStorage.setItem(TIMING.HINT_OVERLAY_KEY, "1");
-    } catch {
-      // no-op
-    }
-    setVisible(false);
-  };
+  }, [visible, dismiss]);
 
   if (!visible) return null;
 

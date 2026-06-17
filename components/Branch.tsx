@@ -7,7 +7,6 @@ import type { BranchFate } from "@/lib/events";
 
 interface BranchProps {
   placement: BranchPlacement;
-  scrollRef: React.RefObject<HTMLDivElement | null>;
   onSelect: (id: string) => void;
 }
 
@@ -31,7 +30,7 @@ const FATE_CLASS: Record<Exclude<BranchFate, "trunk">, string> = {
  *   - a small dot at the event year
  *   - a label below or above the lane (slot-staggered to avoid collisions)
  */
-export function Branch({ placement, scrollRef, onSelect }: BranchProps) {
+export function Branch({ placement, onSelect }: BranchProps) {
   const { event, laneYPx, eventX, toX, slot } = placement;
   const fate = event.fate as Exclude<BranchFate, "trunk">;
 
@@ -56,10 +55,6 @@ export function Branch({ placement, scrollRef, onSelect }: BranchProps) {
     io.observe(pathRef.current);
     return () => io.disconnect();
   }, []);
-
-  // Pruned routes don't need a scroll listener anymore — they're rendered
-  // in their own lane with vermilion stroke + dashed pattern from the start.
-  void scrollRef;
 
   // slot ∈ {-2, -1, 1, 2}. Negative = above the line, positive = below.
   // |slot|=1 sits close to the line; |slot|=2 sits a row further out.
@@ -101,6 +96,17 @@ export function Branch({ placement, scrollRef, onSelect }: BranchProps) {
       {/* Cross-mark at the terminal of pruned routes. */}
       {fate === "pruned" && <PruneMarker cx={toX} cy={laneYPx} />}
 
+      {/* Transparent hitbox over the dot so clicks on the dot itself
+          register on this branch (otherwise the <g> label is the only target). */}
+      <rect
+        x={eventX - 10}
+        y={laneYPx - 10}
+        width={20}
+        height={20}
+        fill="transparent"
+        aria-hidden
+      />
+
       {/* Leader line from the dot to the row-2 label. Offset 6px to the
           right so it doesn't sit on top of a row-1 label that shares X. */}
       {Math.abs(slot) === 2 && (
@@ -136,7 +142,7 @@ export function Branch({ placement, scrollRef, onSelect }: BranchProps) {
       {/* Clickable label. */}
       <g
         transform={`translate(${eventX} ${labelOuterY})`}
-        className="cursor-pointer focus-ring outline-none"
+        className="event-node focus-ring"
         tabIndex={0}
         role="button"
         aria-label={`${event.title} (${event.year}) — ${FATE_LABEL[fate]}`}
@@ -148,6 +154,12 @@ export function Branch({ placement, scrollRef, onSelect }: BranchProps) {
           }
         }}
       >
+        {/* Invisible focus halo — styled via .event-node:focus in globals.css */}
+        <circle
+          r={Math.max(28, (event.title.length * 3.2) / 2)}
+          className="focus-halo"
+          aria-hidden
+        />
         {/* Year — closer to the line */}
         <text
           y={0}

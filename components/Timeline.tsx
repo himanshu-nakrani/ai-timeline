@@ -14,12 +14,14 @@ import { Pulse } from "./Pulse";
 import { TimelineGrid } from "./TimelineGrid";
 import { LaneRail } from "./LaneRail";
 import { FirstRunHint } from "./FirstRunHint";
+import { Legend } from "./Legend";
 import { useStageHeight } from "@/lib/hooks/useStageHeight";
 import { useHorizontalScroll } from "@/lib/hooks/useHorizontalScroll";
 import { useDragPan } from "@/lib/hooks/useDragPan";
 import { useKeyboardNav } from "@/lib/hooks/useKeyboardNav";
 import { useAutoplay } from "@/lib/hooks/useAutoplay";
 import { useEventDeepLink } from "@/lib/hooks/useEventDeepLink";
+import { useInitialScroll } from "@/lib/hooks/useInitialScroll";
 
 type View = "pulse" | "lineage";
 
@@ -62,9 +64,19 @@ export function Timeline() {
     () => sorted.map((ev) => ({ x: yearToX(ev.year, ev.month), ev })),
     [sorted],
   );
+  // Turning-point (nexus) X positions in chronological order — used by
+  // the prev/next nexus quick-nav.
+  const nexusXs = useMemo(
+    () =>
+      sorted
+        .filter((ev) => ev.nexus)
+        .map((ev) => ({ x: yearToX(ev.year, ev.month), id: ev.id, title: ev.title })),
+    [sorted],
+  );
 
   useHorizontalScroll(scrollRef);
   const { isDragging, recentlyPanned } = useDragPan(scrollRef);
+  useInitialScroll(scrollRef, view === "lineage");
   useKeyboardNav({
     scrollRef,
     eventXs,
@@ -104,6 +116,30 @@ export function Timeline() {
     [byId, clear],
   );
 
+  const jumpToNexus = useCallback(
+    (dir: 1 | -1) => {
+      const el = scrollRef.current;
+      if (!el || nexusXs.length === 0) return;
+      // "Current" is whichever nexus is closest to the centre of the viewport.
+      const cursor = el.scrollLeft + el.clientWidth / 2;
+      let target: { x: number; id: string } | undefined;
+      if (dir === 1) {
+        target = nexusXs.find((p) => p.x > cursor + 8);
+        if (!target) target = nexusXs[nexusXs.length - 1];
+      } else {
+        for (let i = nexusXs.length - 1; i >= 0; i--) {
+          if (nexusXs[i].x < cursor - 8) {
+            target = nexusXs[i];
+            break;
+          }
+        }
+        if (!target) target = nexusXs[0];
+      }
+      el.scrollTo({ left: Math.max(0, target.x - el.clientWidth / 2), behavior: "smooth" });
+    },
+    [nexusXs],
+  );
+
   if (view === "pulse") {
     return (
       <div className="relative z-10 min-h-screen pt-20">
@@ -127,7 +163,14 @@ export function Timeline() {
   return (
     <div className="relative z-10 h-screen w-screen overflow-hidden">
       <GridBackdrop scrollRef={scrollRef} />
-      <Header view={view} onView={setView} autoplay={autoplay} onAutoplay={() => setAutoplay((a) => !a)} />
+      <Header
+        view={view}
+        onView={setView}
+        autoplay={autoplay}
+        onAutoplay={() => setAutoplay((a) => !a)}
+        onJumpNexus={jumpToNexus}
+        nexusCount={nexusXs.length}
+      />
 
       <div
         ref={scrollRef}
@@ -182,6 +225,7 @@ export function Timeline() {
       </div>
 
       <FirstRunHint />
+      <Legend />
       <Scrubber scrollRef={scrollRef} />
       <CaseFile event={selected} onClose={clear} />
     </div>
@@ -193,11 +237,17 @@ function Header({
   onView,
   autoplay,
   onAutoplay,
+  onJumpNexus,
+  nexusCount = 0,
 }: {
   view: View;
   onView: (v: View) => void;
   autoplay: boolean;
   onAutoplay: () => void;
+  /** Step backward/forward through turning-point events. Only used in
+   *  Lineage view. */
+  onJumpNexus?: (dir: 1 | -1) => void;
+  nexusCount?: number;
 }) {
   const isLineage = view === "lineage";
   return (
@@ -241,6 +291,40 @@ function Header({
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {isLineage && onJumpNexus && nexusCount > 1 && (
+            <div
+              className="hidden items-center overflow-hidden rounded sm:inline-flex"
+              style={{
+                border: "1px solid rgba(255,255,255,0.12)",
+              }}
+              role="group"
+              aria-label="Jump between turning points"
+            >
+              <NexusNavButton
+                onClick={() => onJumpNexus(-1)}
+                ariaLabel="Previous turning point"
+                glyph="◀"
+              />
+              <span
+                className="px-2 text-[9px] tracking-widest"
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  color: PALETTE.inkSoft,
+                  borderLeft: "1px solid rgba(255,255,255,0.12)",
+                  borderRight: "1px solid rgba(255,255,255,0.12)",
+                  padding: "6px 8px",
+                  letterSpacing: "0.12em",
+                }}
+              >
+                NEXUS
+              </span>
+              <NexusNavButton
+                onClick={() => onJumpNexus(1)}
+                ariaLabel="Next turning point"
+                glyph="▶"
+              />
+            </div>
+          )}
           {isLineage && (
             <ChromeButton
               onClick={onAutoplay}
@@ -285,6 +369,36 @@ function ViewToggle({ view, onView }: { view: View; onView: (v: View) => void })
         ariaLabel="Show the historical timeline"
       />
     </div>
+  );
+}
+
+function NexusNavButton({
+  onClick,
+  ariaLabel,
+  glyph,
+}: {
+  onClick: () => void;
+  ariaLabel: string;
+  glyph: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={ariaLabel}
+      className="focus-ring transition-colors hover:bg-[rgba(255,255,255,0.05)]"
+      style={{
+        fontFamily: "var(--font-mono)",
+        color: PALETTE.ink,
+        background: "transparent",
+        border: "none",
+        padding: "6px 10px",
+        fontSize: 10,
+        lineHeight: 1,
+      }}
+    >
+      <span aria-hidden>{glyph}</span>
+    </button>
   );
 }
 

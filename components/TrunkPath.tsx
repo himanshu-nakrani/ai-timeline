@@ -167,6 +167,72 @@ export function TrunkPath({ stageHeight, trunkEvents, onSelect }: TrunkPathProps
       <g transform={`translate(${totalW} ${trunkYPx})`} aria-hidden>
         <circle r={4.5} fill={PALETTE.gold} stroke={PALETTE.parchment} strokeWidth={1.5} />
       </g>
+
+      <TodayMarker stageHeight={stageHeight} trunkYPx={trunkYPx} />
+    </g>
+  );
+}
+
+function TodayMarker({ stageHeight, trunkYPx }: { stageHeight: number; trunkYPx: number }) {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  // Clamp into the chart so the marker is visible if "now" runs past MAX_YEAR.
+  const clamped =
+    year > 2026 ? { y: 2026, m: 12 } :
+    year < 1956 ? { y: 1956, m: 1 } :
+    { y: year, m: month };
+  const x = yearToX(clamped.y, clamped.m);
+  const topY = 76;
+  const bottomY = stageHeight - 24;
+  return (
+    <g aria-hidden>
+      {/* Vertical line — soft cyan, slightly stronger near the trunk. */}
+      <line
+        x1={x}
+        y1={topY}
+        x2={x}
+        y2={bottomY}
+        stroke={PALETTE.goldBright}
+        strokeOpacity={0.35}
+        strokeWidth={1}
+        strokeDasharray="3 4"
+      />
+      {/* Solid stub at the trunk crossing. */}
+      <line
+        x1={x}
+        y1={trunkYPx - 14}
+        x2={x}
+        y2={trunkYPx + 14}
+        stroke={PALETTE.goldBright}
+        strokeWidth={1.6}
+      />
+      {/* Pill label at the top. */}
+      <g transform={`translate(${x} ${topY - 6})`}>
+        <rect
+          x={-26}
+          y={-12}
+          width={52}
+          height={14}
+          rx={3}
+          fill={PALETTE.parchmentDeep}
+          stroke={PALETTE.goldBright}
+          strokeWidth={0.8}
+          strokeOpacity={0.55}
+        />
+        <text
+          x={0}
+          y={-2}
+          textAnchor="middle"
+          fontFamily="var(--font-mono)"
+          fontSize={9}
+          fontWeight={700}
+          fill={PALETTE.goldBright}
+          letterSpacing={1.4}
+        >
+          TODAY
+        </text>
+      </g>
     </g>
   );
 }

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { decades, yearToX } from "@/lib/layout";
 import { DIMENSIONS, PALETTE } from "@/lib/constants";
+import { DensityRail } from "./DensityRail";
 
 interface ScrubberProps {
   scrollRef: React.RefObject<HTMLDivElement | null>;
@@ -183,7 +184,8 @@ export function Scrubber({ scrollRef }: ScrubberProps) {
           START
         </button>
 
-        <div className="relative flex-1">
+        <div className="relative flex flex-1 flex-col gap-1">
+          <DensityRail />
           {/* Year-tooltip while hovering/dragging */}
           {hoverYear != null && (
             <div

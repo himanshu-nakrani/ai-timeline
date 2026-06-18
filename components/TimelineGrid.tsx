@@ -1,68 +1,97 @@
 "use client";
 
 import { decades, totalWidth, yearToX } from "@/lib/layout";
-import { DIMENSIONS, LANES, PALETTE } from "@/lib/constants";
+import { DIMENSIONS, ERAS, LANES, PALETTE } from "@/lib/constants";
 
 interface GridProps {
   stageHeight: number;
 }
 
 /**
- * In-SVG chrome: alternating lane bands, ink rules between lanes,
- * year ruler with decade labels, future horizon marker.
+ * In-SVG chrome: era-tinted vertical bands, faint lane separators,
+ * year ruler with decade labels, era title rail, future horizon marker.
  * Lane labels themselves live in <LaneRail/>.
  */
 export function TimelineGrid({ stageHeight }: GridProps) {
   const decs = decades();
   const w = totalWidth();
 
-  const bands = LANES.map((lane, i) => {
+  const laneBands = LANES.map((lane, i) => {
     const top = i === 0 ? 0 : (LANES[i - 1].y + lane.y) / 2;
     const bottom = i === LANES.length - 1 ? 1 : (lane.y + LANES[i + 1].y) / 2;
     return { lane, topY: top * stageHeight, bottomY: bottom * stageHeight };
   });
 
+  // Era band geometry — full-height vertical tints, plus a title sitting in
+  // the rail row between the year ruler and the lane content.
+  const eraTitleY = 60;
+  const eraBands = ERAS.map((era, i) => {
+    const x0 = yearToX(Math.max(era.from, DIMENSIONS.MIN_YEAR));
+    const nextFrom = i + 1 < ERAS.length ? ERAS[i + 1].from : DIMENSIONS.MAX_YEAR;
+    const x1 = yearToX(Math.min(nextFrom, DIMENSIONS.MAX_YEAR));
+    return { era, x0, x1, width: x1 - x0 };
+  });
+
   return (
     <g aria-hidden>
-      {bands.map(({ lane, topY, bottomY }, i) => {
-        const isTrunk = lane.id === "trunk";
-        const isAbandoned = lane.id === "abandoned";
-        const fill = isTrunk
-          ? "rgba(6, 182, 212, 0.06)"
-          : isAbandoned
-            ? "rgba(244, 63, 94, 0.05)"
-            : i % 2 === 0
-              ? "rgba(255, 255, 255, 0.02)"
-              : "rgba(255, 255, 255, 0.01)";
-        return (
+      {/* Era vertical bands — they sit under everything else. */}
+      {eraBands.map(({ era, x0, width }) => (
+        <rect
+          key={`era-bg-${era.id}`}
+          x={x0}
+          y={0}
+          width={width}
+          height={stageHeight}
+          fill={era.tint}
+        />
+      ))}
+
+      {/* Vertical separators between eras — faint full-height rules. */}
+      {eraBands.slice(1).map(({ era, x0 }) => (
+        <line
+          key={`era-rule-${era.id}`}
+          x1={x0}
+          y1={48}
+          x2={x0}
+          y2={stageHeight - 24}
+          stroke="rgba(255, 255, 255, 0.08)"
+          strokeWidth={0.7}
+          strokeDasharray="2 6"
+        />
+      ))}
+
+      {/* Subtle highlight for the trunk lane only — keeps the mainline
+          legible against era tints. */}
+      {laneBands
+        .filter(({ lane }) => lane.id === "trunk")
+        .map(({ topY, bottomY }) => (
           <rect
-            key={lane.id}
+            key="trunk-band"
             x={0}
             y={topY}
             width={w}
             height={bottomY - topY}
-            fill={fill}
+            fill="rgba(255, 255, 255, 0.02)"
           />
-        );
-      })}
+        ))}
 
-      {bands.slice(1).map(({ lane, topY }) => (
+      {/* Horizontal lane separators. */}
+      {laneBands.slice(1).map(({ lane, topY }) => (
         <line
-          key={`rule-${lane.id}`}
+          key={`lane-rule-${lane.id}`}
           x1={0}
           y1={topY}
           x2={w}
           y2={topY}
-          stroke="rgba(255, 255, 255, 0.10)"
-          strokeWidth={0.7}
+          stroke="rgba(255, 255, 255, 0.08)"
+          strokeWidth={0.6}
         />
       ))}
 
-      {/* Top year ruler */}
+      {/* Year ruler */}
       <RuledBand y={32} w={w} />
 
-      {/* Decade labels with a short anchor tick. The long dashed-to-trunk
-          leader was removed — it competed with branch curves. */}
+      {/* Decade labels with a short anchor tick. */}
       {decs.map((d) => {
         const x = yearToX(d);
         return (
@@ -88,6 +117,41 @@ export function TimelineGrid({ stageHeight }: GridProps) {
               strokeOpacity={0.7}
               strokeWidth={0.8}
             />
+          </g>
+        );
+      })}
+
+      {/* Era titles — centered in each era band, sitting in the rail row
+          between the year ruler and the lane content. */}
+      {eraBands.map(({ era, x0, width }) => {
+        const cx = x0 + width / 2;
+        return (
+          <g key={`era-title-${era.id}`}>
+            <text
+              x={cx}
+              y={eraTitleY}
+              textAnchor="middle"
+              fontFamily="var(--font-mono)"
+              fontSize={9}
+              fontWeight={700}
+              fill={PALETTE.gold}
+              letterSpacing={2}
+              opacity={0.85}
+            >
+              {era.label.toUpperCase()}
+            </text>
+            <text
+              x={cx}
+              y={eraTitleY + 14}
+              textAnchor="middle"
+              fontFamily="var(--font-display)"
+              fontSize={12}
+              fontWeight={600}
+              fill={PALETTE.ink}
+              opacity={0.7}
+            >
+              {era.subtitle}
+            </text>
           </g>
         );
       })}

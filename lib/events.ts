@@ -4,6 +4,18 @@ export type Category = "foundational" | "product" | "abandoned" | "policy" | "ha
 
 export type BranchFate = "trunk" | "active" | "pruned" | "rejoined" | "constrains";
 
+/** Coarse buckets used by Pulse for filtering. */
+export type Family =
+  | "llm"
+  | "image-video"
+  | "agent"
+  | "coding"
+  | "robotics"
+  | "infra"
+  | "hardware"
+  | "policy"
+  | "research";
+
 export interface Source {
   label: string;
   url: string;
@@ -13,6 +25,8 @@ export interface TimelineEvent {
   id: string;
   year: number;
   month?: number;
+  /** Day of month — only required for items meant to appear in Pulse. */
+  day?: number;
   title: string;
   shortDescription: string;
   longDescription: string;
@@ -24,6 +38,12 @@ export interface TimelineEvent {
   rejoinAt?: string;
   pruneYear?: number;
   sources: Source[];
+  /** Family bucket (Pulse). */
+  family?: Family;
+  /** Lab/vendor that shipped this. */
+  lab?: string;
+  /** Buzz score 0-100; higher = more attention. Used to rank Pulse cards. */
+  buzz?: number;
 }
 
 export const EVENTS: TimelineEvent[] = [
@@ -38,7 +58,7 @@ export const EVENTS: TimelineEvent[] = [
       "John McCarthy, Marvin Minsky, Claude Shannon, and Nathaniel Rochester organized a two-month workshop at Dartmouth College that proposed 'every aspect of learning or any other feature of intelligence can in principle be so precisely described that a machine can be made to simulate it.' The workshop is widely cited as the founding event of AI as a research field.",
     category: "foundational",
     fate: "trunk",
-    variantDesignation: "EVENT-1956-DRT-000",
+    variantDesignation: "TRUNK-1956-DRT-000",
     sources: [
       { label: "Dartmouth College: The Dartmouth Summer Research Project", url: "https://home.dartmouth.edu/about/artificial-intelligence-ai-coined-dartmouth" },
     ],
@@ -52,7 +72,7 @@ export const EVENTS: TimelineEvent[] = [
       "Frank Rosenblatt at the Cornell Aeronautical Laboratory built the Mark I Perceptron, hardware that learned weights via a simple error-correction rule. It could recognize simple visual patterns and was the first learning algorithm proven to converge on a separating hyperplane. The work seeded the connectionist tradition and, decades later, deep learning.",
     category: "foundational",
     fate: "trunk",
-    variantDesignation: "SACRED-1957-PCT-001",
+    variantDesignation: "TRUNK-1957-PCT-001",
     sources: [
       { label: "Wikipedia: Perceptron", url: "https://en.wikipedia.org/wiki/Perceptron" },
     ],
@@ -67,7 +87,7 @@ export const EVENTS: TimelineEvent[] = [
     category: "abandoned",
     fate: "pruned",
     pruneYear: 1990,
-    variantDesignation: "VARIANT-1956-SYM-001",
+    variantDesignation: "BRANCH-1956-SYM-001",
     branchFrom: "dartmouth-1956",
     sources: [
       { label: "Stanford Encyclopedia of Philosophy: GOFAI", url: "https://plato.stanford.edu/entries/go-fai/" },
@@ -85,7 +105,7 @@ export const EVENTS: TimelineEvent[] = [
     category: "abandoned",
     fate: "pruned",
     pruneYear: 1995,
-    variantDesignation: "VARIANT-1965-EXP-002",
+    variantDesignation: "BRANCH-1965-EXP-002",
     branchFrom: "perceptron-1957",
     sources: [
       { label: "Wikipedia: Expert system", url: "https://en.wikipedia.org/wiki/Expert_system" },
@@ -102,7 +122,7 @@ export const EVENTS: TimelineEvent[] = [
     category: "foundational",
     fate: "trunk",
     nexus: false,
-    variantDesignation: "SACRED-1986-BP-003",
+    variantDesignation: "TRUNK-1986-BP-003",
     sources: [
       { label: "Nature: A 'credit assignment' problem (Rumelhart, Hinton, Williams)", url: "https://www.nature.com/articles/323533a0" },
     ],
@@ -119,7 +139,7 @@ export const EVENTS: TimelineEvent[] = [
       "Long Short-Term Memory networks introduced a gated cell that could maintain information over thousands of timesteps. LSTMs powered speech recognition, machine translation, and handwriting recognition through the 2010s and remain a baseline for sequential modeling. The Transformer eventually displaced them for most language tasks, but the underlying ideas of gating live on in modern architectures.",
     category: "foundational",
     fate: "trunk",
-    variantDesignation: "SACRED-1997-LSTM-004",
+    variantDesignation: "TRUNK-1997-LSTM-004",
     sources: [
       { label: "Original LSTM paper (Hochreiter & Schmidhuber, 1997)", url: "https://www.bioinf.jku.at/publications/older/2604.pdf" },
     ],
@@ -134,7 +154,7 @@ export const EVENTS: TimelineEvent[] = [
     category: "abandoned",
     fate: "pruned",
     pruneYear: 2010,
-    variantDesignation: "VARIANT-1994-CYC-005",
+    variantDesignation: "BRANCH-1994-CYC-005",
     branchFrom: "symbolic-ai-1956",
     sources: [
       { label: "Cycorp: About Cyc", url: "https://cyc.com/cyc/overview" },
@@ -151,7 +171,7 @@ export const EVENTS: TimelineEvent[] = [
       "Geoffrey Hinton, Simon Osindero, and Yee-Whye Teh showed that deep neural networks could be trained one layer at a time using restricted Boltzmann machines. The paper is widely credited with launching the modern 'deep learning' era, just before the data and compute caught up.",
     category: "foundational",
     fate: "trunk",
-    variantDesignation: "SACRED-2006-DBN-006",
+    variantDesignation: "TRUNK-2006-DBN-006",
     sources: [
       { label: "Hinton, Osindero, Teh (2006) - Science", url: "https://www.cs.toronto.edu/~hinton/absps/fastnc.pdf" },
     ],
@@ -165,7 +185,7 @@ export const EVENTS: TimelineEvent[] = [
       "Fei-Fei Li's group at Princeton published ImageNet, a dataset of over 3.2 million labeled images organized into 5,247 categories, built on the backbone of WordNet. The accompanying ImageNet Large Scale Visual Recognition Challenge (ILSVRC) became the de facto benchmark for computer vision, and the dramatic error-rate drops in 2012 reshaped the field.",
     category: "foundational",
     fate: "trunk",
-    variantDesignation: "SACRED-2009-IMG-007",
+    variantDesignation: "TRUNK-2009-IMG-007",
     sources: [
       { label: "ImageNet paper (Deng et al., 2009)", url: "https://www.image-net.org/papers/imagenet_cvpr09.pdf" },
     ],
@@ -214,7 +234,7 @@ export const EVENTS: TimelineEvent[] = [
       "Tomas Mikolov and colleagues at Google published two papers introducing the continuous bag-of-words and skip-gram architectures, which produced dense vector representations of words. The famous 'king - man + woman ≈ queen' example demonstrated that semantic relationships lived in linear subspaces. Word2Vec made embeddings a standard tool across NLP.",
     category: "foundational",
     fate: "trunk",
-    variantDesignation: "SACRED-2013-W2V-010",
+    variantDesignation: "TRUNK-2013-W2V-010",
     sources: [
       { label: "Word2Vec paper (Mikolov et al., 2013)", url: "https://arxiv.org/abs/1301.3781" },
     ],
@@ -229,7 +249,7 @@ export const EVENTS: TimelineEvent[] = [
       "The sequence-to-sequence architecture paired two LSTMs: an encoder that read a variable-length input into a fixed vector, and a decoder that generated the output. Combined with attention, the approach replaced phrase-based statistical machine translation within three years and seeded the encoder-decoder pattern used in modern Transformers.",
     category: "foundational",
     fate: "trunk",
-    variantDesignation: "SACRED-2014-S2S-011",
+    variantDesignation: "TRUNK-2014-S2S-011",
     sources: [
       { label: "Seq2Seq paper (Sutskever, Vinyals, Le, 2014)", url: "https://arxiv.org/abs/1409.3215" },
     ],
@@ -278,7 +298,7 @@ export const EVENTS: TimelineEvent[] = [
     category: "abandoned",
     fate: "pruned",
     pruneYear: 2021,
-    variantDesignation: "VARIANT-2017-CAP-014",
+    variantDesignation: "BRANCH-2017-CAP-014",
     branchFrom: "alexnet-2012",
     sources: [
       { label: "Capsule Networks paper (Sabour & Hinton, 2017)", url: "https://arxiv.org/abs/1710.09829" },
@@ -310,7 +330,7 @@ export const EVENTS: TimelineEvent[] = [
       "Google's BERT (Bidirectional Encoder Representations from Transformers) showed that masked language modeling on large unlabeled corpora produced representations that could be fine-tuned to state of the art on a wide range of NLP tasks with very small task-specific modifications. The pattern dominated NLP until decoder-only generative models took over.",
     category: "product",
     fate: "trunk",
-    variantDesignation: "SACRED-2018-BRT-016",
+    variantDesignation: "TRUNK-2018-BRT-016",
     branchFrom: "transformer-2017",
     sources: [
       { label: "BERT paper (Devlin et al., 2018)", url: "https://arxiv.org/abs/1810.04805" },
@@ -326,7 +346,7 @@ export const EVENTS: TimelineEvent[] = [
       "GPT-2's 1.5B-parameter autoregressive Transformer produced text often indistinguishable from human writing. OpenAI's decision to withhold the full model under a 'staged release' strategy sparked widespread debate about responsible disclosure of powerful AI, and prefigured later policy discussions.",
     category: "product",
     fate: "trunk",
-    variantDesignation: "SACRED-2019-GPT2-017",
+    variantDesignation: "TRUNK-2019-GPT2-017",
     branchFrom: "transformer-2017",
     sources: [
       { label: "GPT-2 paper (Radford et al., 2019)", url: "https://openai.com/index/better-language-models/" },
@@ -360,7 +380,7 @@ export const EVENTS: TimelineEvent[] = [
       "OpenAI's GPT-3 scaled the decoder Transformer to 175B parameters and showed that simply conditioning on a few examples in the prompt could solve many tasks at near-fine-tuned quality, without any gradient updates. The paper made 'prompting' a verb and launched the LLM era.",
     category: "foundational",
     fate: "trunk",
-    variantDesignation: "SACRED-2020-GPT3-019",
+    variantDesignation: "TRUNK-2020-GPT3-019",
     branchFrom: "gpt-2-2019",
     sources: [
       { label: "GPT-3 paper (Brown et al., 2020)", url: "https://arxiv.org/abs/2005.14165" },
@@ -409,7 +429,7 @@ export const EVENTS: TimelineEvent[] = [
     category: "abandoned",
     fate: "pruned",
     pruneYear: 2024,
-    variantDesignation: "VARIANT-2020-RL-022",
+    variantDesignation: "BRANCH-2020-RL-022",
     branchFrom: "deepmind-dqn-2013",
     sources: [
       { label: "DeepMind Gato (2022)", url: "https://arxiv.org/abs/2205.06175" },
@@ -558,7 +578,7 @@ export const EVENTS: TimelineEvent[] = [
       "OpenAI's o1 (September 2024) and the o-series that followed scaled 'thinking time' rather than raw parameters, training with reinforcement learning over chain-of-thought traces. The models dramatically improved performance on math, code, and science benchmarks, establishing a second axis of progress: scaling compute at inference time, not just training time.",
     category: "product",
     fate: "trunk",
-    variantDesignation: "SACRED-2024-RSN-031",
+    variantDesignation: "TRUNK-2024-RSN-031",
     branchFrom: "multimodal-2023",
     sources: [
       { label: "OpenAI: Learning to Reason with LLMs", url: "https://openai.com/index/learning-to-reason-with-llms/" },
@@ -602,12 +622,12 @@ export const EVENTS: TimelineEvent[] = [
     year: 2026,
     month: 6,
     title: "Present Day",
-    shortDescription: "Frontier models, deployed agents, and an emerging regulatory layer. The Via Aurea continues into uncharted seas.",
+    shortDescription: "Frontier models, deployed agents, and an emerging regulatory layer. The mainline continues into uncharted territory.",
     longDescription:
-      "As of mid-2026, the canonical lineage of modern AI — from the 1957 perceptron through Transformer-based foundation models, RLHF alignment, multimodal agents, and test-time-compute reasoning — runs in production at planetary scale. The Via Aurea continues. New expeditions sail from the main route every week. Beyond this point, the map is blank.",
+      "As of mid-2026, the canonical lineage of modern AI — from the 1957 perceptron through Transformer-based foundation models, RLHF alignment, multimodal agents, and test-time-compute reasoning — runs in production at planetary scale. The mainline continues. New branches fork off every week. Beyond this point, the map is blank.",
     category: "foundational",
     fate: "trunk",
-    variantDesignation: "SACRED-2026-PRES-034",
+    variantDesignation: "TRUNK-2026-PRES-034",
     branchFrom: "agentic-2025",
     sources: [
       { label: "Stanford AI Index 2026", url: "https://aiindex.stanford.edu/report/" },
@@ -625,7 +645,7 @@ export const EVENTS: TimelineEvent[] = [
       "ELIZA, written by Joseph Weizenbaum at MIT, simulated a Rogerian psychotherapist by reflecting user inputs back as questions. It had no real understanding, but users famously confided in it — a result so disturbing to Weizenbaum that he later wrote 'Computer Power and Human Reason' warning against anthropomorphising machines.",
     category: "product",
     fate: "active",
-    variantDesignation: "EXPEDITIO-1966-ELZ-A01",
+    variantDesignation: "ACTIVE-1966-ELZ-A01",
     branchFrom: "dartmouth-1956",
     sources: [
       { label: "Weizenbaum: ELIZA (Communications of the ACM, 1966)", url: "https://dl.acm.org/doi/10.1145/365153.365168" },
@@ -641,7 +661,7 @@ export const EVENTS: TimelineEvent[] = [
     category: "abandoned",
     fate: "pruned",
     pruneYear: 1980,
-    variantDesignation: "DRACO-1974-WIN-A02",
+    variantDesignation: "PRUNED-1974-WIN-A02",
     branchFrom: "expert-systems-1965",
     sources: [
       { label: "Lighthill Report (1973)", url: "https://en.wikipedia.org/wiki/Lighthill_report" },
@@ -657,7 +677,7 @@ export const EVENTS: TimelineEvent[] = [
     category: "product",
     fate: "rejoined",
     rejoinAt: "expert-systems-1965",
-    variantDesignation: "RECEPTUS-1976-MYC-A03",
+    variantDesignation: "REJOINED-1976-MYC-A03",
     branchFrom: "expert-systems-1965",
     sources: [
       { label: "Wikipedia: MYCIN", url: "https://en.wikipedia.org/wiki/Mycin" },
@@ -673,7 +693,7 @@ export const EVENTS: TimelineEvent[] = [
     category: "abandoned",
     fate: "pruned",
     pruneYear: 1992,
-    variantDesignation: "DRACO-1982-FGN-A04",
+    variantDesignation: "PRUNED-1982-FGN-A04",
     branchFrom: "expert-systems-1965",
     sources: [
       { label: "Wikipedia: Fifth Generation Computer Systems", url: "https://en.wikipedia.org/wiki/Fifth_generation_computer" },
@@ -689,7 +709,7 @@ export const EVENTS: TimelineEvent[] = [
     category: "foundational",
     fate: "rejoined",
     rejoinAt: "backprop-1986",
-    variantDesignation: "RECEPTUS-1987-NTK-A05",
+    variantDesignation: "REJOINED-1987-NTK-A05",
     branchFrom: "backprop-1986",
     sources: [
       { label: "Sejnowski & Rosenberg: NETtalk (1987)", url: "https://papers.cnl.salk.edu/PDFs/Parallel%20Networks%20that%20Learn%20to%20Pronounce%20English%20Text%201987-3562.pdf" },
@@ -705,7 +725,7 @@ export const EVENTS: TimelineEvent[] = [
     category: "foundational",
     fate: "rejoined",
     rejoinAt: "alphago-2016",
-    variantDesignation: "RECEPTUS-1992-TDG-A06",
+    variantDesignation: "REJOINED-1992-TDG-A06",
     branchFrom: "backprop-1986",
     sources: [
       { label: "Tesauro: TD-Gammon (1995)", url: "https://www.bkgm.com/articles/tesauro/tdl.html" },
@@ -720,7 +740,7 @@ export const EVENTS: TimelineEvent[] = [
       "Support Vector Machines, formalised by Corinna Cortes and Vladimir Vapnik, combined a margin-maximising classifier with the kernel trick to handle nonlinear data. SVMs became the default classifier for text, vision, and biology applications until deep learning surpassed them after 2012.",
     category: "foundational",
     fate: "active",
-    variantDesignation: "EXPEDITIO-1995-SVM-A07",
+    variantDesignation: "ACTIVE-1995-SVM-A07",
     branchFrom: "perceptron-1957",
     sources: [
       { label: "Cortes & Vapnik: Support-Vector Networks (1995)", url: "https://link.springer.com/article/10.1007/BF00994018" },
@@ -737,7 +757,7 @@ export const EVENTS: TimelineEvent[] = [
     category: "hardware",
     fate: "rejoined",
     rejoinAt: "alphago-2016",
-    variantDesignation: "RECEPTUS-1997-DBL-A08",
+    variantDesignation: "REJOINED-1997-DBL-A08",
     branchFrom: "expert-systems-1965",
     sources: [
       { label: "IBM: Deep Blue", url: "https://www.ibm.com/history/deep-blue" },
@@ -754,7 +774,7 @@ export const EVENTS: TimelineEvent[] = [
     category: "product",
     fate: "rejoined",
     rejoinAt: "transformer-2017",
-    variantDesignation: "RECEPTUS-2011-WTS-A09",
+    variantDesignation: "REJOINED-2011-WTS-A09",
     branchFrom: "expert-systems-1965",
     sources: [
       { label: "IBM Research: Watson", url: "https://research.ibm.com/blog/watson-jeopardy" },
@@ -770,7 +790,7 @@ export const EVENTS: TimelineEvent[] = [
       "Spun out of SRI's CALO project and acquired by Apple in 2010, Siri shipped with the iPhone 4S in October 2011. It was the first widely deployed consumer voice assistant and seeded the assistant arms race: Google Now (2012), Cortana (2014), Alexa (2014).",
     category: "product",
     fate: "active",
-    variantDesignation: "EXPEDITIO-2011-SRI-A10",
+    variantDesignation: "ACTIVE-2011-SRI-A10",
     branchFrom: "expert-systems-1965",
     sources: [
       { label: "Apple: Introducing Siri (2011)", url: "https://www.apple.com/newsroom/2011/10/04Apple-Launches-iPhone-4S-iOS-5-iCloud/" },
@@ -787,7 +807,7 @@ export const EVENTS: TimelineEvent[] = [
     category: "foundational",
     fate: "rejoined",
     rejoinAt: "transformer-2017",
-    variantDesignation: "RECEPTUS-2017-AZR-A11",
+    variantDesignation: "REJOINED-2017-AZR-A11",
     branchFrom: "alphago-2016",
     sources: [
       { label: "Silver et al.: AlphaZero (Science, 2018)", url: "https://www.science.org/doi/10.1126/science.aar6404" },
@@ -804,7 +824,7 @@ export const EVENTS: TimelineEvent[] = [
     category: "foundational",
     fate: "rejoined",
     rejoinAt: "gpt-3-2020",
-    variantDesignation: "RECEPTUS-2018-GP1-A12",
+    variantDesignation: "REJOINED-2018-GP1-A12",
     branchFrom: "transformer-2017",
     sources: [
       { label: "Radford et al.: Improving Language Understanding (2018)", url: "https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf" },
@@ -820,7 +840,7 @@ export const EVENTS: TimelineEvent[] = [
       "CLIP (Contrastive Language–Image Pre-training) trained a paired image and text encoder on 400M (image, caption) pairs from the web. It enabled zero-shot image classification by computing similarity between an image and a textual prompt, and became a building block of Stable Diffusion, DALL-E 2, and most multimodal systems that followed.",
     category: "foundational",
     fate: "active",
-    variantDesignation: "EXPEDITIO-2021-CLP-A13",
+    variantDesignation: "ACTIVE-2021-CLP-A13",
     branchFrom: "transformer-2017",
     sources: [
       { label: "Radford et al.: CLIP (2021)", url: "https://openai.com/research/clip" },
@@ -836,7 +856,7 @@ export const EVENTS: TimelineEvent[] = [
       "DALL-E 2 combined CLIP's text encoder with a diffusion image decoder to generate high-fidelity images from natural-language prompts. Its public waitlist drew millions and triggered the year of generative imagery — Midjourney, Stable Diffusion, Imagen — and the first round of debates about copyright, style theft, and consent in training data.",
     category: "product",
     fate: "active",
-    variantDesignation: "EXPEDITIO-2022-DL2-A14",
+    variantDesignation: "ACTIVE-2022-DL2-A14",
     branchFrom: "diffusion-2020",
     sources: [
       { label: "OpenAI: DALL-E 2", url: "https://openai.com/index/dall-e-2/" },
@@ -852,7 +872,7 @@ export const EVENTS: TimelineEvent[] = [
       "Stable Diffusion, developed at LMU Munich with Stability AI compute, was released with weights and code on 22 August 2022. Unlike DALL-E 2, it ran on consumer GPUs and could be freely fine-tuned. Within weeks it had spawned a forks-and-LoRAs ecosystem that turned text-to-image into a hobbyist medium.",
     category: "product",
     fate: "active",
-    variantDesignation: "EXPEDITIO-2022-SDF-A15",
+    variantDesignation: "ACTIVE-2022-SDF-A15",
     branchFrom: "diffusion-2020",
     sources: [
       { label: "Stability AI: Stable Diffusion Public Release", url: "https://stability.ai/news/stable-diffusion-public-release" },
@@ -868,7 +888,7 @@ export const EVENTS: TimelineEvent[] = [
       "GitHub Copilot, built on OpenAI Codex, became the first widely deployed code-completion product backed by a large language model. It changed how engineers write code, triggered the still-ongoing debate about training on public source repositories, and presaged Cursor, Codeium, and Claude Code.",
     category: "product",
     fate: "active",
-    variantDesignation: "EXPEDITIO-2021-CPL-A16",
+    variantDesignation: "ACTIVE-2021-CPL-A16",
     branchFrom: "transformer-2017",
     sources: [
       { label: "GitHub: Copilot announcement", url: "https://github.blog/news-insights/product-news/introducing-github-copilot-ai-pair-programmer/" },
@@ -884,7 +904,7 @@ export const EVENTS: TimelineEvent[] = [
       "Anthropic released Claude as a general-purpose assistant trained with Constitutional AI — a method that uses a written constitution and AI feedback to reduce harms without exhaustive human labelling. Claude established Anthropic as a frontier lab alongside OpenAI, Google DeepMind, and Meta AI.",
     category: "product",
     fate: "active",
-    variantDesignation: "EXPEDITIO-2023-CLD-A17",
+    variantDesignation: "ACTIVE-2023-CLD-A17",
     branchFrom: "rlhf-2022",
     sources: [
       { label: "Anthropic: Claude launch", url: "https://www.anthropic.com/news/introducing-claude" },
@@ -900,7 +920,7 @@ export const EVENTS: TimelineEvent[] = [
       "Gemini was Google DeepMind's first model trained from the start on text, code, images, audio, and video. The Ultra tier reportedly outscored GPT-4 on a majority of benchmarks at launch. Gemini consolidated Google's previously fragmented model teams (Bard, PaLM, LaMDA) into one lineage.",
     category: "product",
     fate: "active",
-    variantDesignation: "EXPEDITIO-2023-GEM-A18",
+    variantDesignation: "ACTIVE-2023-GEM-A18",
     branchFrom: "transformer-2017",
     sources: [
       { label: "Google: Introducing Gemini", url: "https://blog.google/technology/ai/google-gemini-ai/" },
@@ -916,7 +936,7 @@ export const EVENTS: TimelineEvent[] = [
       "Mistral AI, founded by alumni of Meta and DeepMind, released Mistral 7B under Apache 2.0 in September 2023. It beat LLaMA 2 13B on most benchmarks despite being half the size, showing how much room remained in pretraining recipes — and that European labs could ship competitive open-weights models.",
     category: "product",
     fate: "active",
-    variantDesignation: "EXPEDITIO-2023-MST-A19",
+    variantDesignation: "ACTIVE-2023-MST-A19",
     branchFrom: "llama-2023",
     sources: [
       { label: "Mistral AI: Mistral 7B", url: "https://mistral.ai/news/announcing-mistral-7b/" },
@@ -932,7 +952,7 @@ export const EVENTS: TimelineEvent[] = [
       "Sora, previewed in February 2024, generated up to 60-second 1080p video clips from text prompts using a diffusion model over spacetime patches with a Transformer backbone. Its physics consistency and shot composition surprised the industry and reset expectations for generative video.",
     category: "product",
     fate: "active",
-    variantDesignation: "EXPEDITIO-2024-SOR-A20",
+    variantDesignation: "ACTIVE-2024-SOR-A20",
     branchFrom: "diffusion-2020",
     sources: [
       { label: "OpenAI: Sora technical report", url: "https://openai.com/index/sora/" },
@@ -949,7 +969,7 @@ export const EVENTS: TimelineEvent[] = [
     category: "hardware",
     fate: "rejoined",
     rejoinAt: "gpt4-2023",
-    variantDesignation: "RECEPTUS-2022-H100-A21",
+    variantDesignation: "REJOINED-2022-H100-A21",
     branchFrom: "tpu-v4-2021",
     sources: [
       { label: "NVIDIA: H100 announcement", url: "https://nvidianews.nvidia.com/news/nvidia-announces-hopper-architecture-the-next-generation-of-accelerated-computing" },
@@ -965,7 +985,7 @@ export const EVENTS: TimelineEvent[] = [
       "Blackwell B200 GPUs combine two reticle-limited dies via a 10 TB/s NV-HBI link and ship in racks (GB200 NVL72) that act as one accelerator. Blackwell underpins the 2025 training runs that produced the next generation of frontier models.",
     category: "hardware",
     fate: "active",
-    variantDesignation: "EXPEDITIO-2024-BLK-A22",
+    variantDesignation: "ACTIVE-2024-BLK-A22",
     branchFrom: "tpu-v4-2021",
     sources: [
       { label: "NVIDIA: Blackwell architecture", url: "https://nvidianews.nvidia.com/news/nvidia-blackwell-platform-arrives-to-power-a-new-era-of-computing" },
@@ -981,7 +1001,7 @@ export const EVENTS: TimelineEvent[] = [
       "AlphaFold 3 replaced the AF2 evoformer with a diffusion-based architecture and predicts the joint structure of proteins together with nucleic acids and small-molecule ligands. It made structural biology a routine in-silico exercise and changed early-stage drug discovery workflows.",
     category: "foundational",
     fate: "active",
-    variantDesignation: "EXPEDITIO-2024-AF3-A23",
+    variantDesignation: "ACTIVE-2024-AF3-A23",
     branchFrom: "alphafold-2020",
     sources: [
       { label: "Google DeepMind: AlphaFold 3", url: "https://deepmind.google/discover/blog/alphafold-3-predicts-the-structure-and-interactions-of-all-of-lifes-molecules/" },
@@ -998,7 +1018,7 @@ export const EVENTS: TimelineEvent[] = [
     category: "policy",
     fate: "pruned",
     pruneYear: 2025,
-    variantDesignation: "DRACO-2023-EO14110-A24",
+    variantDesignation: "PRUNED-2023-EO14110-A24",
     branchFrom: "rlhf-2022",
     sources: [
       { label: "White House: Executive Order 14110 (2023)", url: "https://www.federalregister.gov/documents/2023/11/01/2023-24283/safe-secure-and-trustworthy-development-and-use-of-artificial-intelligence" },
@@ -1014,7 +1034,7 @@ export const EVENTS: TimelineEvent[] = [
       "MCP defines a JSON-RPC protocol for exposing tools, prompts, and resources to language models. Within months it was adopted by Cursor, Zed, Sourcegraph, and the major IDE-assistant vendors as the lingua franca for agent–tool integration — analogous to LSP for editors.",
     category: "foundational",
     fate: "active",
-    variantDesignation: "EXPEDITIO-2024-MCP-A25",
+    variantDesignation: "ACTIVE-2024-MCP-A25",
     branchFrom: "agentic-2025",
     sources: [
       { label: "Anthropic: Introducing the Model Context Protocol", url: "https://www.anthropic.com/news/model-context-protocol" },

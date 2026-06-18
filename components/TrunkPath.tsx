@@ -1,28 +1,25 @@
 "use client";
 
 import { useMemo } from "react";
-import { buildTrunkPath, totalWidth, trunkY, yearToX } from "@/lib/layout";
+import { totalWidth, trunkY, yearToX } from "@/lib/layout";
 import { DIMENSIONS, PALETTE } from "@/lib/constants";
 import type { TimelineEvent } from "@/lib/events";
 
-interface SacredTrunkProps {
+interface TrunkPathProps {
   stageHeight: number;
   trunkEvents: TimelineEvent[];
   onSelect: (id: string) => void;
 }
 
 const MIN_TITLE_GAP_PX = 200;
-// Trunk title rows: -2 = far above, -1 = above, 1 = below, 2 = far below.
 type TrunkSlot = -2 | -1 | 1 | 2;
 const TRUNK_SLOT_ORDER: TrunkSlot[] = [1, -1, 2, -2];
 
 /**
- * The Via Aurea — gold-ink trade route. Titles use a chain-aware 4-row
- * stagger so chains of close trunk events (e.g. ChatGPT → GPT-4 →
- * Multimodal → Reasoning) never overlap.
+ * The mainline: a flat cyan rail with event nodes and stagger-placed titles.
+ * Slot algorithm avoids label collisions for chains of close trunk events.
  */
-export function SacredTrunk({ stageHeight, trunkEvents, onSelect }: SacredTrunkProps) {
-  const trunkPath = useMemo(() => buildTrunkPath(stageHeight), [stageHeight]);
+export function TrunkPath({ stageHeight, trunkEvents, onSelect }: TrunkPathProps) {
   const totalW = totalWidth();
   const trunkYPx = trunkY(stageHeight);
 
@@ -39,11 +36,9 @@ export function SacredTrunk({ stageHeight, trunkEvents, onSelect }: SacredTrunkP
     return sorted.map((ev, idx) => {
       const x = yearToX(ev.year, ev.month);
       let slot: TrunkSlot = TRUNK_SLOT_ORDER[0];
-      // Pin the first two trunk events to the *above* slot so their labels
-      // are not occluded by the sticky left lane rail.
-      if (idx === 0) {
-        slot = -1;
-      } else if (idx === 1) {
+      // Pin the first two trunk events above so labels don't sit under the
+      // sticky left lane rail.
+      if (idx === 0 || idx === 1) {
         slot = -1;
       } else {
         for (const s of TRUNK_SLOT_ORDER) {
@@ -52,7 +47,6 @@ export function SacredTrunk({ stageHeight, trunkEvents, onSelect }: SacredTrunkP
             break;
           }
         }
-        // Fallback to least-recently-used slot if every slot is crowded.
         if (x - lastX[slot] < MIN_TITLE_GAP_PX) {
           let best: TrunkSlot = TRUNK_SLOT_ORDER[0];
           for (const s of TRUNK_SLOT_ORDER) {
@@ -67,24 +61,39 @@ export function SacredTrunk({ stageHeight, trunkEvents, onSelect }: SacredTrunkP
   }, [trunkEvents]);
 
   return (
-    <g aria-label="Via Aurea — canonical lineage">
-      {/* Halo: a wider, faded cyan stroke under the main one. */}
-      <path
-        d={trunkPath}
-        fill="none"
+    <g aria-label="Mainline — canonical lineage">
+      <line
+        x1={0}
+        y1={trunkYPx}
+        x2={totalW}
+        y2={trunkYPx}
         stroke={PALETTE.gold}
         strokeWidth={6}
         strokeLinecap="round"
         strokeOpacity={0.15}
       />
-      {/* Ink edge */}
-      <path d={trunkPath} fill="none" stroke={PALETTE.parchment} strokeWidth={3.5} strokeLinecap="round" />
-      {/* Cyan core */}
-      <path d={trunkPath} fill="none" stroke={PALETTE.gold} strokeWidth={1.8} strokeLinecap="round" />
+      <line
+        x1={0}
+        y1={trunkYPx}
+        x2={totalW}
+        y2={trunkYPx}
+        stroke={PALETTE.parchment}
+        strokeWidth={3.5}
+        strokeLinecap="round"
+      />
+      <line
+        x1={0}
+        y1={trunkYPx}
+        x2={totalW}
+        y2={trunkYPx}
+        stroke={PALETTE.gold}
+        strokeWidth={1.8}
+        strokeLinecap="round"
+      />
 
       {placed.map(({ ev, x, slot }) => {
         const dir = slot > 0 ? 1 : -1;
-        const rowOffset = (Math.abs(slot) - 1) * 26; // extra space for outer rows
+        const rowOffset = (Math.abs(slot) - 1) * 26;
         const yearOffset = dir * (16 + rowOffset);
         const titleOffset = dir * ((ev.nexus ? 32 : 28) + rowOffset);
         const showLeader = Math.abs(slot) === 2;
@@ -95,7 +104,7 @@ export function SacredTrunk({ stageHeight, trunkEvents, onSelect }: SacredTrunkP
             className="event-node focus-ring"
             tabIndex={0}
             role="button"
-            aria-label={`${ev.title} (${ev.year}) — Canonical${ev.nexus ? " · nexus event" : ""}`}
+            aria-label={`${ev.title} (${ev.year}) — Canonical${ev.nexus ? " · turning point" : ""}`}
             onClick={() => onSelect(ev.id)}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
@@ -104,10 +113,7 @@ export function SacredTrunk({ stageHeight, trunkEvents, onSelect }: SacredTrunkP
               }
             }}
           >
-            {/* Invisible focus halo — styled via .event-node:focus in globals.css */}
             <circle r={DIMENSIONS.NEXUS_RADIUS + 4} className="focus-halo" aria-hidden />
-            {/* Transparent hitbox so clicking the trunk line or the year/title
-                text all routes to the event, not just the label. */}
             <rect
               x={-44}
               y={Math.min(yearOffset, titleOffset) - 8}
@@ -129,9 +135,7 @@ export function SacredTrunk({ stageHeight, trunkEvents, onSelect }: SacredTrunkP
             {ev.nexus ? (
               <NexusRings />
             ) : (
-              <>
-                <circle r={5} fill={PALETTE.gold} stroke={PALETTE.parchment} strokeWidth={1.5} />
-              </>
+              <circle r={5} fill={PALETTE.gold} stroke={PALETTE.parchment} strokeWidth={1.5} />
             )}
             <text
               y={yearOffset}
@@ -160,7 +164,6 @@ export function SacredTrunk({ stageHeight, trunkEvents, onSelect }: SacredTrunkP
         );
       })}
 
-      {/* Right cap — small concentric mark for "present". */}
       <g transform={`translate(${totalW} ${trunkYPx})`} aria-hidden>
         <circle r={4.5} fill={PALETTE.gold} stroke={PALETTE.parchment} strokeWidth={1.5} />
       </g>
@@ -171,7 +174,6 @@ export function SacredTrunk({ stageHeight, trunkEvents, onSelect }: SacredTrunkP
 function NexusRings() {
   return (
     <g aria-hidden>
-      {/* Outer pulsing ring — honors prefers-reduced-motion via globals.css */}
       <circle
         r={DIMENSIONS.NEXUS_RADIUS + 7}
         fill="none"
@@ -180,7 +182,6 @@ function NexusRings() {
         strokeWidth={1}
         className="nexus-pulse"
       />
-      {/* Middle ring */}
       <circle
         r={DIMENSIONS.NEXUS_RADIUS}
         fill="none"
@@ -188,7 +189,6 @@ function NexusRings() {
         strokeOpacity={0.5}
         strokeWidth={0.8}
       />
-      {/* Inner dot */}
       <circle r={4.5} fill={PALETTE.goldBright} stroke={PALETTE.parchment} strokeWidth={1.5} />
     </g>
   );

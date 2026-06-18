@@ -52,10 +52,8 @@ export function laneForEvent(ev: TimelineEvent): LaneId {
 function categoryToLane(c: Category): LaneId {
   switch (c) {
     case "policy":
-      return "policy";
-    case "hardware":
-      return "hardware";
     case "product":
+    case "hardware":
       return "products";
     case "foundational":
       return "research";
@@ -85,18 +83,36 @@ export function computeEventCoordinates(
   return coords;
 }
 
+export type BranchSlot = -3 | -2 | -1 | 1 | 2 | 3;
+
 export interface BranchPlacement {
   event: TimelineEvent;
   lane: LaneId;
   laneYPx: number;
-  slot: -2 | -1 | 1 | 2;
+  slot: BranchSlot;
   eventX: number;
+  /** Where the label sits horizontally — usually eventX, but nudged when
+   *  multiple events would otherwise stack on top of each other. */
+  labelX: number;
   toX: number;
   pathD: string;
 }
 
-const MIN_LABEL_GAP_PX = 170;
-const SLOT_ORDER: BranchPlacement["slot"][] = [1, -1, 2, -2];
+/** Per-character font metric for var(--font-display) at 11px / weight 600,
+ *  used to estimate label half-width. */
+const LABEL_PX_PER_CHAR = 6.2;
+const LABEL_PADDING_PX = 14;
+/** Slots tried in order. Inner rows (±1) preferred; outer rows added only
+ *  when the inner ones are crowded. */
+const SLOT_ORDER: BranchSlot[] = [1, -1, 2, -2, 3, -3];
+/** When all slots in a lane are crowded, nudge the label horizontally so
+ *  it doesn't stack directly on top of the previous one. */
+const NUDGE_PX = 48;
+
+function labelHalfWidth(title: string): number {
+  const t = title.length > 32 ? 32 : title.length;
+  return (t * LABEL_PX_PER_CHAR) / 2 + LABEL_PADDING_PX;
+}
 
 /**
  * Assigns slots for labels and computes connected Bezier curves for branch segments.
@@ -113,8 +129,11 @@ export function assignBranchPlacements(
     .filter((e) => e.fate !== "trunk")
     .sort((a, b) => a.year - b.year || (a.month ?? 0) - (b.month ?? 0));
 
-  type SlotMap = Record<BranchPlacement["slot"], number>;
-  const initial = (): SlotMap => ({ [-2]: -Infinity, [-1]: -Infinity, 1: -Infinity, 2: -Infinity });
+  type SlotMap = Record<BranchSlot, number>;
+  const initial = (): SlotMap => ({
+    [-3]: -Infinity, [-2]: -Infinity, [-1]: -Infinity,
+    1: -Infinity, 2: -Infinity, 3: -Infinity,
+  });
   const lastX: Record<LaneId, SlotMap> = LANES.reduce(
     (acc, l) => ({ ...acc, [l.id]: initial() }),
     {} as Record<LaneId, SlotMap>,
@@ -126,16 +145,24 @@ export function assignBranchPlacements(
     const lane = laneForEvent(ev);
     const laneYPx = laneY(lane, stageHeight);
     const eventX = yearToX(ev.year, ev.month);
+    const halfW = labelHalfWidth(ev.title);
 
-    // Pick the first slot whose previous label is far enough away horizontally.
-    let slot: BranchPlacement["slot"] = SLOT_ORDER[0];
+    // A slot is "open" when the new label's left edge clears the previous
+    // label's right edge in that slot.
+    let slot: BranchSlot = SLOT_ORDER[0];
+    let foundOpenSlot = false;
     for (const s of SLOT_ORDER) {
-      if (eventX - lastX[lane][s] >= MIN_LABEL_GAP_PX) {
+      if (eventX - halfW >= lastX[lane][s]) {
         slot = s;
+        foundOpenSlot = true;
         break;
       }
     }
-    if (eventX - lastX[lane][slot] < MIN_LABEL_GAP_PX) {
+    let labelX = eventX;
+    if (!foundOpenSlot) {
+      // Every slot is crowded — fall back to the LRU slot and nudge the
+      // label horizontally so it doesn't stack directly on the previous
+      // one in this slot.
       let best = SLOT_ORDER[0];
       let bestX = lastX[lane][best];
       for (const s of SLOT_ORDER) {
@@ -145,13 +172,21 @@ export function assignBranchPlacements(
         }
       }
       slot = best;
+      // Push the label to the right far enough to clear the previous one.
+      labelX = Math.max(eventX, bestX + halfW + 8);
+      // If that overshoots reasonable distance from the dot, fall back to
+      // a fixed left-nudge so the leader stays short.
+      if (labelX - eventX > NUDGE_PX * 2) labelX = eventX + NUDGE_PX;
     }
-    lastX[lane][slot] = eventX;
+    lastX[lane][slot] = Math.max(eventX, labelX) + halfW;
 
-    // Determine the terminal X of the branch
+    // Determine the terminal X of the branch. Active branches get a short
+    // tail (not a run to the chart edge) — otherwise the right side becomes
+    // a forest of parallel rails.
+    const ACTIVE_TAIL_PX = 80;
     const toX = (() => {
       if (ev.fate === "pruned") return yearToX(ev.pruneYear ?? ev.year + 4);
-      if (ev.fate === "active") return totalW;
+      if (ev.fate === "active") return Math.min(totalW, eventX + ACTIVE_TAIL_PX);
       if (ev.fate === "rejoined" && ev.rejoinAt) {
         const target = coords.get(ev.rejoinAt);
         return target ? target.x : eventX + 300;
@@ -159,20 +194,24 @@ export function assignBranchPlacements(
       return eventX + 300;
     })();
 
-    // Generate connected SVG path
+    // Generate connected SVG path. The incoming curve forks off the parent
+    // lane no more than CONNECTOR_MAX_PX before the event — this keeps
+    // long-distance branches from sweeping across the entire chart.
+    const CONNECTOR_MAX_PX = 160;
     let pathD = "";
     const parent = ev.branchFrom ? coords.get(ev.branchFrom) : null;
-    const parentX = parent ? parent.x : Math.max(0, eventX - 100);
     const parentY = parent ? parent.y : trY;
 
-    // 1. Incoming curve: Bezier from parent node to event node (horizontal alignment)
-    const curveStartX = Math.min(parentX, eventX - 40);
+    const curveStartX = Math.max(
+      parent ? Math.max(parent.x, eventX - CONNECTOR_MAX_PX) : eventX - 80,
+      eventX - CONNECTOR_MAX_PX,
+    );
     pathD += `M ${curveStartX.toFixed(1)} ${parentY.toFixed(1)}`;
     pathD += ` C ${((curveStartX + eventX) / 2).toFixed(1)} ${parentY.toFixed(1)},`;
     pathD += ` ${((curveStartX + eventX) / 2).toFixed(1)} ${laneYPx.toFixed(1)},`;
     pathD += ` ${eventX.toFixed(1)} ${laneYPx.toFixed(1)}`;
 
-    // 2. Horizontal run and Outgoing paths
+    // Outgoing segment.
     if (ev.fate === "rejoined" && ev.rejoinAt) {
       const target = coords.get(ev.rejoinAt);
       if (target) {
@@ -180,9 +219,7 @@ export function assignBranchPlacements(
         const rejoinY = target.y;
         const runEndX = Math.max(eventX, rejoinX - 60);
 
-        // Run straight horizontally
         pathD += ` L ${runEndX.toFixed(1)} ${laneYPx.toFixed(1)}`;
-        // Curve back to the target node
         pathD += ` C ${((runEndX + rejoinX) / 2).toFixed(1)} ${laneYPx.toFixed(1)},`;
         pathD += ` ${((runEndX + rejoinX) / 2).toFixed(1)} ${rejoinY.toFixed(1)},`;
         pathD += ` ${rejoinX.toFixed(1)} ${rejoinY.toFixed(1)}`;
@@ -190,7 +227,6 @@ export function assignBranchPlacements(
         pathD += ` L ${toX.toFixed(1)} ${laneYPx.toFixed(1)}`;
       }
     } else {
-      // Standard run to the end (active/pruned)
       pathD += ` L ${toX.toFixed(1)} ${laneYPx.toFixed(1)}`;
     }
 
@@ -200,6 +236,7 @@ export function assignBranchPlacements(
       laneYPx,
       slot,
       eventX,
+      labelX,
       toX,
       pathD,
     });
@@ -208,17 +245,3 @@ export function assignBranchPlacements(
   return placements;
 }
 
-/** The Via Aurea: a straight gold rail with a very gentle hand-drawn waver. */
-export function buildTrunkPath(stageHeight: number): string {
-  const y = trunkY(stageHeight);
-  const w = totalWidth();
-  const period = PX_PER_YEAR * 16;
-  const amp = 3;
-  const step = 32;
-  let d = `M 0 ${y.toFixed(2)}`;
-  for (let x = step; x <= w; x += step) {
-    const yOff = Math.sin((x / period) * Math.PI * 2) * amp;
-    d += ` L ${x.toFixed(2)} ${(y + yOff).toFixed(2)}`;
-  }
-  return d;
-}

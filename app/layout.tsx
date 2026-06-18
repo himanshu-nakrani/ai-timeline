@@ -24,14 +24,14 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "AI Lineage · The Evolution of Machine Intelligence",
+  title: "AI Lineage · What just shipped, and how we got here",
   description:
-    "An interactive chronology of major advancements in artificial intelligence from 1956 to 2026. A minimal, clean branching timeline tracking the canonical lineage, active trajectories, and abandoned paths.",
+    "Two views of AI: Pulse — a buzz-sorted feed of recent model, agent, and policy launches; Lineage — the seventy-year historical timeline that explains how we got here. Built for the chronically online.",
   metadataBase: new URL("https://ai-lineage.example.com"),
   openGraph: {
-    title: "AI Lineage · The Evolution of Machine Intelligence",
+    title: "AI Lineage · What just shipped, and how we got here",
     description:
-      "A minimal, clean branching timeline tracking the canonical lineage, active trajectories, and abandoned paths of AI.",
+      "Pulse: this week's launches, filtered by family and lab. Lineage: 1956→present as a branching timeline.",
     type: "website",
   },
 };

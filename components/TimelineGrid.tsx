@@ -1,37 +1,29 @@
 "use client";
 
-import { decades, totalWidth, trunkY, yearToX } from "@/lib/layout";
+import { decades, totalWidth, yearToX } from "@/lib/layout";
 import { DIMENSIONS, LANES, PALETTE } from "@/lib/constants";
 
-interface OrnamentsProps {
+interface GridProps {
   stageHeight: number;
 }
 
 /**
  * In-SVG chrome: alternating lane bands, ink rules between lanes,
- * year ruler with decade labels, and the "Terra incognita →" marginalia.
- * The lane labels themselves live in <LaneRail/>.
+ * year ruler with decade labels, future horizon marker.
+ * Lane labels themselves live in <LaneRail/>.
  */
-export function CartographyOrnaments({ stageHeight }: OrnamentsProps) {
+export function TimelineGrid({ stageHeight }: GridProps) {
   const decs = decades();
   const w = totalWidth();
 
-  // Each lane occupies a band [topY, bottomY] bounded by midpoints with
-  // its neighbours (or the SVG top/bottom for the edge lanes).
   const bands = LANES.map((lane, i) => {
     const top = i === 0 ? 0 : (LANES[i - 1].y + lane.y) / 2;
     const bottom = i === LANES.length - 1 ? 1 : (lane.y + LANES[i + 1].y) / 2;
     return { lane, topY: top * stageHeight, bottomY: bottom * stageHeight };
   });
 
-  const abandonedLaneY = (LANES.find((l) => l.id === "abandoned")?.y ?? 0.84) * stageHeight;
-
   return (
     <g aria-hidden>
-      {/* Alternating lane band tints — bumped to be visible against the
-          near-black background. Cyan-tinted trunk band anchors the canonical
-          lineage; rose-tinted abandoned band signals the graveyard; the rest
-          alternate subtly. */}
       {bands.map(({ lane, topY, bottomY }, i) => {
         const isTrunk = lane.id === "trunk";
         const isAbandoned = lane.id === "abandoned";
@@ -54,8 +46,6 @@ export function CartographyOrnaments({ stageHeight }: OrnamentsProps) {
         );
       })}
 
-      {/* Rules between lane bands — bumped to 0.10 alpha so the lane system
-          reads as deliberate. */}
       {bands.slice(1).map(({ lane, topY }) => (
         <line
           key={`rule-${lane.id}`}
@@ -71,13 +61,10 @@ export function CartographyOrnaments({ stageHeight }: OrnamentsProps) {
       {/* Top year ruler */}
       <RuledBand y={32} w={w} />
 
-      {/* Decade labels above the ruler, with a thin anchor line that runs
-          from the year label all the way down to the trunk. Two stroke weights
-          so the upper segment reads as a year tick and the lower segment
-          fades into a subtle lane-anchoring line. */}
+      {/* Decade labels with a short anchor tick. The long dashed-to-trunk
+          leader was removed — it competed with branch curves. */}
       {decs.map((d) => {
         const x = yearToX(d);
-        const yToTrunk = trunkY(stageHeight);
         return (
           <g key={d}>
             <text
@@ -92,7 +79,6 @@ export function CartographyOrnaments({ stageHeight }: OrnamentsProps) {
             >
               {d}
             </text>
-            {/* Upper segment — year tick, opaque. */}
             <line
               x1={x}
               y1={26}
@@ -102,25 +88,13 @@ export function CartographyOrnaments({ stageHeight }: OrnamentsProps) {
               strokeOpacity={0.7}
               strokeWidth={0.8}
             />
-            {/* Lower segment — fades to the trunk. */}
-            <line
-              x1={x}
-              y1={44}
-              x2={x}
-              y2={yToTrunk}
-              stroke={PALETTE.gold}
-              strokeOpacity={0.25}
-              strokeWidth={0.6}
-              strokeDasharray="2 4"
-            />
           </g>
         );
       })}
 
-      {/* Horizon label */}
       <text
         x={w - 12}
-        y={Math.min(stageHeight - 24, abandonedLaneY - 28)}
+        y={stageHeight - 16}
         textAnchor="end"
         fontFamily="var(--font-mono)"
         fontSize={10}
@@ -142,7 +116,6 @@ function RuledBand({ y, w }: { y: number; w: number }) {
   }
   return (
     <g aria-hidden>
-      {/* Top rule line — slightly brighter than the lane separators. */}
       <line x1={0} y1={y} x2={w} y2={y} stroke="rgba(255, 255, 255, 0.18)" strokeWidth={0.8} />
       {ticks.map((t) => (
         <line
@@ -151,7 +124,6 @@ function RuledBand({ y, w }: { y: number; w: number }) {
           y1={y}
           x2={t.x}
           y2={y + (t.major ? 10 : 3)}
-          // Major ticks are 2.5x more visible than minor ones.
           stroke={t.major ? "rgba(255, 255, 255, 0.45)" : "rgba(255, 255, 255, 0.1)"}
           strokeWidth={t.major ? 1.2 : 0.4}
         />

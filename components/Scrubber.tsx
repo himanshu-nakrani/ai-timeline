@@ -9,11 +9,11 @@ interface ScrubberProps {
 }
 
 /**
- * A brass-rule scrubber pinned to the bottom of the map. The playhead is
- * draggable and shows the current year while dragging. Decade chips
- * provide quick jumps; on mobile they fall to a compact wrap row.
+ * Scrubber pinned to the bottom of the map. The playhead is draggable and
+ * shows the current year while dragging. Decade chips provide quick jumps;
+ * on mobile they fall to a compact wrap row.
  */
-export function TempPadScrubber({ scrollRef }: ScrubberProps) {
+export function Scrubber({ scrollRef }: ScrubberProps) {
   const playheadRef = useRef<HTMLDivElement | null>(null);
   const trackRef = useRef<HTMLDivElement | null>(null);
   const draggingRef = useRef(false);
@@ -24,7 +24,7 @@ export function TempPadScrubber({ scrollRef }: ScrubberProps) {
   // All setHoverYear calls go through this wrapper so the ref stays in sync.
   const updateHoverYear = (y: number | null) => {
     hoverYearRef.current = y;
-    updateHoverYear(y);
+    setHoverYear(y);
   };
 
   // Sync playhead to scroll position.

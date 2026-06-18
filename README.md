@@ -1,18 +1,28 @@
-# AI Lineage · The Evolution of Machine Intelligence
+# AI Lineage · What just shipped, and how we got here
 
-An editorial, screenshot-worthy interactive timeline that visualizes the major advancements in AI from **1956 → 2026** as a glowing horizontal **trunk** with branching variants that either prune away, rejoin the mainline, or constrain it. Minimal dark theme, fully keyboard- and screen-reader-friendly.
+Two views of the AI industry. **Pulse** is the default: a buzz-sorted card
+grid of the last 90 days of model launches, agent releases, hardware
+announcements, and policy moves — filtered by family and lab so you can
+cut through the firehose. **Lineage** is the long arc: a horizontal
+chronology from **1956 → 2026**, drawn as a glowing mainline with branches
+that prune, rejoin, or constrain it.
 
-> A clean, modern cartographer's map. No third-party IP — every event is hand-authored with at least one primary source.
+Made for the chronically online: the goal is *anti-overwhelm*. Pulse
+answers "what mattered this week"; Lineage answers "how did we get here".
+
+> Hand-curated. No third-party IP — every entry has at least one primary
+> source. Each item has a stable `?event=<id>` deep link.
 
 ## Tech stack
 
 - **Next.js 16** (App Router, React 19, RSC where it makes sense)
 - **Tailwind CSS v4** with CSS variables for the palette
-- **Framer Motion** for the case-file panel
 - **@vercel/analytics** + **@vercel/speed-insights**
 - **TypeScript** strict mode
 
-No database, no auth, no AI features, no i18n. The data lives in `lib/events.ts`.
+The case-file panel uses plain CSS keyframes (no animation library).
+No database, no auth, no i18n. Historical data lives in `lib/events.ts`;
+the rolling recent-launches list lives in `lib/recent.ts`.
 
 ## Run locally
 
@@ -31,44 +41,52 @@ npm start
 
 ## Deploy to Vercel
 
-The repo includes a `vercel.ts` declaring the framework. Just push to `main` and import the project on Vercel, or run `vercel deploy` from the CLI.
+The repo includes a `vercel.ts` declaring the framework. Just push to
+`main` and import the project on Vercel, or run `vercel deploy` from the
+CLI. Vercel auto-detects Next.js; Fluid Compute defaults are fine; no
+edge runtime is needed.
 
-```bash
-git push origin main
-# import the repo at vercel.com/new
-```
+## Update Pulse (weekly)
 
-Vercel auto-detects Next.js. Fluid Compute defaults are fine; no edge runtime is needed.
-
-## Add a new event
-
-Open `lib/events.ts` and append a new `TimelineEvent` to the `EVENTS` array.
+`lib/recent.ts` is the working file. Append a new `TimelineEvent` to the
+`RECENT` array. Keep the list to roughly the last 120 days — older
+entries should either be removed or promoted into `lib/events.ts` if
+they turn out to matter for the long arc.
 
 ```ts
 {
-  id: "stable-diffusion-3-2024",
-  year: 2024,
-  month: 6,
-  title: "Stable Diffusion 3",
+  id: "claude-opus-4-7-2026-06",
+  year: 2026, month: 6, day: 12,
+  title: "Claude Opus 4.7 (1M context)",
   shortDescription: "One sentence summary, plain language.",
-  longDescription: "Three to six sentences for the case-file panel.",
-  category: "product",          // foundational | product | abandoned | policy | hardware
-  fate: "active",                // trunk | active | pruned | rejoined | constrains
-  variantDesignation: "BRANCH-2024-SD3-035",
-  branchFrom: "diffusion-2020",  // id of trunk event it branches from
+  longDescription: "Three to six sentences for the dossier.",
+  category: "product",
+  fate: "active",
+  family: "llm",          // llm | image-video | agent | coding | robotics
+                          // | infra | hardware | policy | research
+  lab: "Anthropic",
+  buzz: 92,               // 0-100; ~80+ means "the whole feed is talking"
+  variantDesignation: "ACTIVE-2026-OPUS47-R01",
   sources: [
-    { label: "Stability AI blog post", url: "https://..." },
+    { label: "Anthropic announcement", url: "https://..." },
   ],
 }
 ```
 
-Conventions:
-- `fate: "trunk"` puts the event on the canonical spine.
-- `fate: "active"` renders a glowing branch that runs to the present.
-- `fate: "pruned"` fades in with a dashed vermilion stroke ending in a cross-marker.
-- `fate: "rejoined"` requires `rejoinAt: <id-of-trunk-event>`.
-- `fate: "constrains"` renders a dashed amber loop that visually narrows the trunk downstream.
-- `nexus: true` triggers the pulsing-ring animation.
+## Add a historical event
+
+Open `lib/events.ts` and append to `EVENTS`. Conventions:
+
+- `fate: "trunk"` — on the canonical mainline.
+- `fate: "active"` — a branch that's still going. Renders a short tail
+  with an arrow marker.
+- `fate: "pruned"` — abandoned approach. Dashed rose stroke ending in a
+  cross. Requires `pruneYear`.
+- `fate: "rejoined"` — absorbed back into the mainline. Requires
+  `rejoinAt: <id-of-trunk-event>`.
+- `fate: "constrains"` — dashed amber line for policy/regulation that
+  visibly shapes the trajectory.
+- `nexus: true` — turning point. Triggers the pulsing ring.
 
 Every event must include at least one `sources` entry.
 
@@ -80,43 +98,53 @@ app/
   page.tsx                    // server component, renders <Timeline />
   globals.css                 // Tailwind v4 + palette + keyframes
 components/
-  Timeline.tsx                // client; orchestrates scroll, drag, keyboard, autoplay
-  SacredTrunk.tsx             // SVG path for the main trunk + trunk event nodes
-  Branch.tsx                  // SVG path for one branch + prune / rejoin markers
+  Timeline.tsx                // client; view-switching + header
+  Pulse.tsx                   // Pulse view: filters + buzz-sorted cards
+  TrunkPath.tsx               // SVG line for the mainline + trunk nodes
+  Branch.tsx                  // one branch + prune / rejoin / active markers
   CaseFile.tsx                // dossier panel (modal, focus-trapped)
-  TempPadScrubber.tsx         // sticky decade scrubber + playhead
+  Scrubber.tsx                // sticky decade scrubber + playhead
   GridBackdrop.tsx            // parallax dot grid backdrop
-  CartographyOrnaments.tsx    // lane bands, year ruler, decade anchors
+  TimelineGrid.tsx            // lane bands, year ruler, decade anchors
   LaneRail.tsx                // sticky left rail with lane labels
-  Astrolabe.tsx               // optional corner mascot (FLAGS.SHOW_MASCOT)
   FirstRunHint.tsx            // first-visit navigation card
-  EventsList.tsx              // accessible vertical fallback with era groups
 lib/
-  events.ts                   // 61 hand-authored events
-  layout.ts                   // pure layout functions (yearToX, assignBranchPlacements, buildTrunkPath)
-  constants.ts                // palette, dimensions, timing, lanes, feature flags
+  events.ts                   // hand-authored historical events
+  recent.ts                   // rolling recent launches (Pulse view)
+  layout.ts                   // pure layout fns
+  constants.ts                // palette, dimensions, timing, lanes
+  hooks/
+    useStageHeight.ts
+    useHorizontalScroll.ts
+    useDragPan.ts
+    useKeyboardNav.ts
+    useAutoplay.ts
+    useEventDeepLink.ts
 vercel.ts                     // framework: "nextjs"
 ```
 
-## Interaction model
+Lineage uses 4 swimlanes: **Products**, **Canonical** (the mainline),
+**Research**, and **Abandoned**. Hardware and policy events live in
+**Products** with a small `HW` / `REG` badge next to the dot.
 
-- **Mouse wheel** scrolls the timeline horizontally (vertical wheel deltas are translated).
+## Interaction model (Lineage)
+
+- **Mouse wheel** scrolls the timeline horizontally.
 - **Trackpad horizontal scroll** passes through natively.
 - **Click-and-drag** on empty space pans the view.
-- **Keyboard:**
-  - `←` / `→` — step between events
-  - `Home` / `End` — jump to start / end
-  - `Space` — toggle autoplay
-  - `Esc` — close the dossier
-- **Hover** an event for the bright glow; **click** to open its dossier.
-- **TempPad scrubber** at the bottom: click any decade chip, or watch the playhead track your scroll.
+- **Keyboard:** `←`/`→` step between events · `Home`/`End` jump to
+  start/finish · `Space` toggles autoplay · `Esc` closes the dossier.
+- **Hover** for a glow; **click** to open the dossier.
+- **Scrubber** at the bottom: click a decade chip, or drag the playhead.
 
 ## Accessibility
 
-- All events reachable in tab order, in chronological sequence.
-- Dossier is a proper `role="dialog" aria-modal="true"` with focus trap and focus restoration.
-- `prefers-reduced-motion` disables all looping animations.
-- An **INDEX** toggle in the header renders the same data as a vertical `<ol>` for screen readers and as a no-scroll fallback.
+- All events reachable in tab order in chronological sequence.
+- Dossier is a `role="dialog" aria-modal="true"` with focus trap and
+  focus restoration.
+- `prefers-reduced-motion` disables looping animations and the slide-up
+  panel animation.
+- Pulse cards are buttons with full keyboard support.
 
 ## License
 

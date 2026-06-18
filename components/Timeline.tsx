@@ -39,25 +39,26 @@ export function Timeline() {
     };
   }, [view]);
 
+  // The Lineage chart includes both the curated historical events and the
+  // rolling RECENT launches — Pulse and Lineage stay in sync that way.
+  const allEvents = useMemo(() => [...EVENTS, ...RECENT], []);
   const sorted = useMemo(
-    () => [...EVENTS].sort((a, b) => a.year - b.year || (a.month ?? 0) - (b.month ?? 0)),
-    [],
+    () => [...allEvents].sort((a, b) => a.year - b.year || (a.month ?? 0) - (b.month ?? 0)),
+    [allEvents],
   );
-  // Dossier lookups span both historical events and recent launches.
   const byId = useMemo(() => {
     const m = new Map<string, TimelineEvent>();
-    for (const e of EVENTS) m.set(e.id, e);
-    for (const e of RECENT) m.set(e.id, e);
+    for (const e of allEvents) m.set(e.id, e);
     return m;
-  }, []);
-  // Which ids are part of the historical timeline (the "Lineage" view).
-  // Only these support the "View on map" action.
-  const historicalIds = useMemo(() => new Set(EVENTS.map((e) => e.id)), []);
+  }, [allEvents]);
+  // Every event in the merged dataset has a position on the Lineage chart,
+  // so every dossier supports the "View on map" action.
+  const historicalIds = useMemo(() => new Set(allEvents.map((e) => e.id)), [allEvents]);
 
-  const trunkEvents = useMemo(() => EVENTS.filter((e) => e.fate === "trunk"), []);
+  const trunkEvents = useMemo(() => allEvents.filter((e) => e.fate === "trunk"), [allEvents]);
   const placements = useMemo(
-    () => assignBranchPlacements(EVENTS, stageHeight),
-    [stageHeight],
+    () => assignBranchPlacements(allEvents, stageHeight),
+    [allEvents, stageHeight],
   );
 
   const eventXs = useMemo(

@@ -617,23 +617,6 @@ export const EVENTS: TimelineEvent[] = [
       { label: "White House: AI Executive Orders", url: "https://www.whitehouse.gov/presidential-actions/2025/01/advancing-united-states-leadership-in-artificial-intelligence-infrastructure/" },
     ],
   },
-  {
-    id: "present-2026",
-    year: 2026,
-    month: 6,
-    title: "Present Day",
-    shortDescription: "Frontier models, deployed agents, and an emerging regulatory layer. The mainline continues into uncharted territory.",
-    longDescription:
-      "As of mid-2026, the canonical lineage of modern AI — from the 1957 perceptron through Transformer-based foundation models, RLHF alignment, multimodal agents, and test-time-compute reasoning — runs in production at planetary scale. The mainline continues. New branches fork off every week. Beyond this point, the map is blank.",
-    category: "foundational",
-    fate: "trunk",
-    variantDesignation: "TRUNK-2026-PRES-034",
-    branchFrom: "agentic-2025",
-    sources: [
-      { label: "Stanford AI Index 2026", url: "https://aiindex.stanford.edu/report/" },
-    ],
-  },
-
   // --- Minor expeditions: smaller landmarks added so the map reads densely. ---
 
   {

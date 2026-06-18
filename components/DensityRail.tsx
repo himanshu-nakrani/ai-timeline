@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { EVENTS } from "@/lib/events";
+import { RECENT } from "@/lib/recent";
 import { DIMENSIONS, PALETTE } from "@/lib/constants";
 
 /**
@@ -18,6 +19,9 @@ export function DensityRail() {
     const counts = new Map<number, number>();
     for (let y = DIMENSIONS.MIN_YEAR; y <= DIMENSIONS.MAX_YEAR; y++) counts.set(y, 0);
     for (const ev of EVENTS) {
+      counts.set(ev.year, (counts.get(ev.year) ?? 0) + 1);
+    }
+    for (const ev of RECENT) {
       counts.set(ev.year, (counts.get(ev.year) ?? 0) + 1);
     }
     let max = 0;
